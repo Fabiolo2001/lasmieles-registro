@@ -148,6 +148,20 @@ export default async (req, context) => {
       if (!LEAGUES[lg] || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return json({ error: "Parámetros no válidos" }, 400);
       return json(await scoreboard(lg, d), 200, { "cache-control": "public, max-age=20" });
     }
+    // Resumen del día para la tarea del mensaje de buenos días (protegido con clave RESUMEN_KEY)
+    if (route === "resumen" && m === "GET") {
+      const key = Netlify.env.get("RESUMEN_KEY");
+      if (!key || !sameText(url.searchParams.get("k") || "", key)) return json({ error: "Clave no válida" }, 401);
+      const d = url.searchParams.get("d") || new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date(Date.now() - 864e5));
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return json({ error: "Fecha no válida" }, 400);
+      const rows = await db().sql`SELECT id, data FROM picks WHERE date = ${d} ORDER BY data->>'createdAt', (data->>'ord')::int`;
+      const picks = rows.map((r) => { const p = r.data; return { paquete: p.package, seccion: p.section, deporte: p.sport, jugada: p.pick, partido: (p.game && p.game.name) || p.event || "", tipo: p.betType,
+        unidades: p.units, cuota: p.odds ?? null, resultado: p.result || "pendiente", nota: p.resultNote || "", marcador: p.final ? p.final.score + (p.final.detail ? " (" + p.final.detail + ")" : "") : "",
+        selecciones: Array.isArray(p.legs) ? p.legs.map((l) => ({ texto: l.text, resultado: l.result || null, marcador: l.final ? l.final.score : "" })) : undefined }; });
+      const t = { ganados: 0, perdidos: 0, nulos: 0, pendientes: 0, unidadesGanadas: 0, unidadesPerdidas: 0 };
+      for (const p of picks) { const u = Number(p.unidades) || 0; if (p.resultado === "ganado") { t.ganados++; t.unidadesGanadas += u; } else if (p.resultado === "perdido") { t.perdidos++; t.unidadesPerdidas += u; } else if (p.resultado === "nulo") t.nulos++; else t.pendientes++; }
+      return json({ fecha: d, totales: t, picks });
+    }
     if (route === "logout") {
       context.cookies.delete({ name: COOKIE, path: "/" });
       return json({ ok: true });
