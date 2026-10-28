@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS ajustes (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);

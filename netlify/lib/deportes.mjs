@@ -1,6 +1,7 @@
 // Marcadores (ESPN), vinculación de picks con su partido y calificación automática.
 import { getDatabase } from "@netlify/database";
 import Anthropic from "@anthropic-ai/sdk";
+import { notify, esc } from "./telegram.mjs";
 import "../../public/mercado.js";
 const { evalMkt, comboStatus } = globalThis.LMMercado;
 
@@ -407,9 +408,28 @@ PICKS: ${JSON.stringify(items)}`;
   }
 
   /* 5) Guardar */
+  const marked = [];
   for (const [id, obj] of patches) {
     const j = JSON.stringify(obj);
-    await sql`UPDATE picks SET data = data || ${j}::jsonb, updated_at = now() WHERE id = ${id} AND COALESCE(data->>'result','pendiente') = 'pendiente'`;
+    const r = await sql`UPDATE picks SET data = data || ${j}::jsonb, updated_at = now() WHERE id = ${id} AND COALESCE(data->>'result','pendiente') = 'pendiente' RETURNING date`;
+    if (obj.result && r.length) marked.push({ p: picks.find((x) => x.id === id), obj });
   }
-  return { picks: picks.length, matched: unmatched.length, finished: finished.length, live: live.length, updated: patches.size };
+  /* 6) Aviso por Telegram de cada pick marcado, con el balance del día */
+  if (marked.length) {
+    const PK = { soccer: "Soccer", exclusiva: "Exclusiva", asegurada: "Asegurada", props: "Player Props", free: "Free Pick", instagram: "Instagram" };
+    const SEC = { vip: "Jugada VIP", pick5: "Picks extras", extra5: "Picks extras" };
+    const ICON = { ganado: "✅", perdido: "❌", nulo: "➖" };
+    for (const { p, obj } of marked) {
+      const day = (await sql`SELECT data->>'result' AS r, (data->>'units')::float AS u FROM picks WHERE date = ${p.date}`);
+      const t = { g: 0, l: 0, n: 0, pend: 0, ug: 0, ul: 0 };
+      for (const x of day) { const u = x.u || 0; if (x.r === "ganado") { t.g++; t.ug += u; } else if (x.r === "perdido") { t.l++; t.ul += u; } else if (x.r === "nulo") t.n++; else t.pend++; }
+      const net = t.ug - t.ul;
+      const txt = `${ICON[obj.result] || "•"} <b>${esc(obj.result.toUpperCase())}</b> · ${esc(SEC[p.section] || PK[p.package] || p.package)} · ${esc(p.units)} U\n` +
+        `${esc(p.pick)}\n` + (obj.final && obj.final.score ? `${esc(obj.final.score)}${obj.final.detail ? " · " + esc(obj.final.detail) : ""}\n` : "") +
+        (obj.resultNote ? `<i>${esc(obj.resultNote)}</i>\n` : "") +
+        `\nDía ${esc(p.date)}: ${t.g}-${t.l}-${t.n} · ${net >= 0 ? "+" : ""}${net} U${t.pend ? ` · ${t.pend} pendiente${t.pend === 1 ? "" : "s"}` : ""}`;
+      try { await notify(txt); } catch (e) { log("telegram " + e.message); }
+    }
+  }
+  return { picks: picks.length, matched: unmatched.length, finished: finished.length, live: live.length, updated: patches.size, avisos: marked.length };
 }
