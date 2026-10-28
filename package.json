@@ -1,0 +1,11 @@
+{
+  "name": "lasmieles-registro",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20.12.2" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@netlify/blobs": "latest",
+    "@netlify/database": "latest"
+  }
+}

@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Registro Las Mieles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px max(16px,env(safe-area-inset-left,0px))}
+.login form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px}
+.login h1{font-family:var(--display);font-size:30px;margin:0;line-height:1}.login h1 span{color:var(--honey)}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+
+/* Layout: herramienta interna de marcador deportivo. Barra superior con pestañas, barra de mes compartida, calendario + panel del día. */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --sunk:#e8ece5; --line:#d5dcd2;
+  --fg:#16211b; --muted:#5a6a60;
+  --honey:#b77a06; --honey-soft:#fbefd2; --pitch:#1e5a3c;
+  --win:#1d8248; --win-soft:#dcf1e3; --loss:#bf3b26; --loss-soft:#f8e0db; --push:#7b8680; --pend:#4a6ea8; --pend-soft:#e1e9f6;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1411; --surface:#161f1a; --sunk:#1d2822; --line:#2b3a31;
+  --fg:#e7eee8; --muted:#97a69c;
+  --honey:#f2b632; --honey-soft:#3a2d0f; --pitch:#5fbf8a;
+  --win:#4cc47e; --win-soft:#173322; --loss:#ef7660; --loss-soft:#3b1b15; --push:#8c9891; --pend:#8fb1ea; --pend-soft:#1c2840; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1411; --surface:#161f1a; --sunk:#1d2822; --line:#2b3a31;
+  --fg:#e7eee8; --muted:#97a69c;
+  --honey:#f2b632; --honey-soft:#3a2d0f; --pitch:#5fbf8a;
+  --win:#4cc47e; --win-soft:#173322; --loss:#ef7660; --loss-soft:#3b1b15; --push:#8c9891; --pend:#8fb1ea; --pend-soft:#1c2840; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding-block:14px}
+.brand{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.01em;line-height:1}
+.brand span{color:var(--honey)}
+.brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+nav.tabs{display:flex;gap:4px;margin-left:auto;background:var(--sunk);padding:4px;border-radius:10px}
+nav.tabs{max-width:100%;overflow-x:auto;scrollbar-width:none}nav.tabs button{white-space:nowrap}
+@media (max-width:520px){nav.tabs{margin-left:0;width:100%;display:grid;grid-template-columns:1fr 1fr}nav.tabs button{padding:8px 10px;font-size:14px}}
+nav.tabs button{font:600 15px var(--body);border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:7px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+button{font-family:var(--body)}
+:focus-visible{outline:2px solid var(--honey);outline-offset:2px}
+.monthbar{display:flex;align-items:center;gap:10px;padding-block:20px 14px;flex-wrap:wrap}
+.monthbar h1{font-family:var(--display);font-weight:600;font-size:34px;margin:0;line-height:1;text-transform:capitalize;min-width:220px}
+.iconbtn{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;font-size:18px;line-height:1}
+.btn{font:600 14px var(--body);border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 14px;cursor:pointer}
+.btn.primary{background:var(--pitch);border-color:var(--pitch);color:var(--surface)}
+.btn.honey{background:var(--honey);border-color:var(--honey);color:#1b1404}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--loss)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.notice{background:var(--honey-soft);border:1px solid var(--honey);border-radius:10px;padding:12px 14px;margin-block:12px}
+
+/* Calendario */
+.calgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start;padding-bottom:40px}
+@media (max-width:900px){.calgrid{grid-template-columns:minmax(0,1fr)}}
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.dow,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.dow div{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px;border-bottom:1px solid var(--line)}
+.day{min-height:96px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 7px;background:var(--surface);cursor:pointer;text-align:left;font:inherit;color:inherit;display:flex;flex-direction:column;gap:4px;min-width:0;border-top:0;border-left:0}
+.day:nth-child(7n){border-right:0}
+.day.out{background:var(--bg);color:var(--muted);cursor:default}
+.day .n{font-family:var(--display);font-weight:600;font-size:19px;line-height:1;display:flex;justify-content:space-between;align-items:center;gap:4px}
+.day.today .n b{background:var(--pitch);color:var(--surface);border-radius:6px;padding:2px 6px}
+.day.sel{box-shadow:inset 0 0 0 2px var(--honey)}
+.day.important{background:var(--honey-soft)}
+.flag{width:9px;height:9px;border-radius:2px;background:var(--honey);transform:rotate(45deg);flex:none}
+.dots{display:flex;flex-wrap:wrap;gap:3px}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.ganado{background:var(--win)}.dot.perdido{background:var(--loss)}.dot.nulo{background:var(--push)}.dot.pendiente{border:1.5px solid var(--pend)}
+.day .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.day .nt{font-size:11.5px;line-height:1.25;color:var(--fg);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+@media (max-width:600px){.day{min-height:62px;padding:4px}.day .nt,.day .cnt{display:none}.day .n{font-size:16px}}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);padding:10px 12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px;position:static;scroll-margin-top:12px}
+/* Debajo del calendario: picks en columnas cuando hay sitio */
+#dayPanel .pkgblock{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:10px;align-items:start}
+#dayPanel .pkgblock h3{grid-column:1/-1}
+#dayPanel .notebox{max-width:640px}
+@media (max-width:900px){.panel{position:static}}
+.panel h2{font-family:var(--display);font-weight:600;font-size:26px;margin:0;line-height:1.05;text-transform:capitalize}
+.lbl{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+textarea,input,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:64px}
+.notebox{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pkgblock{display:flex;flex-direction:column;gap:8px}
+.pkgblock h3{margin:0;font-family:var(--display);font-weight:600;font-size:18px;display:flex;justify-content:space-between;align-items:baseline}
+.pick{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.pick.ganado{border-left:4px solid var(--win)}.pick.perdido{border-left:4px solid var(--loss)}.pick.nulo{border-left:4px solid var(--push)}.pick.pendiente{border-left:4px solid var(--pend)}
+.pick .ev{font-weight:600;overflow-wrap:anywhere}
+.pick .pk{font-size:15px;overflow-wrap:anywhere}
+.pick .meta{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{font:600 12px var(--body);border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:6px;padding:5px 8px;cursor:pointer}
+.seg button.on.ganado{background:var(--win-soft);border-color:var(--win);color:var(--win)}
+.seg button.on.perdido{background:var(--loss-soft);border-color:var(--loss);color:var(--loss)}
+.seg button.on.nulo{background:var(--sunk);border-color:var(--push);color:var(--fg)}
+.seg button.on.pendiente{background:var(--pend-soft);border-color:var(--pend);color:var(--pend)}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.thumbs a img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.empty{color:var(--muted);font-size:14px}
+
+/* Análisis */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end;padding-bottom:16px}
+.filters label{display:flex;flex-direction:column;gap:4px;min-width:150px;flex:1 1 150px;max-width:240px}
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.tile .v{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.tile .v.rec{letter-spacing:.02em}
+.tile .s{font-size:13px;color:var(--muted);margin-top:4px}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;padding-bottom:40px}
+@media (max-width:420px){.tables{grid-template-columns:minmax(0,1fr)}}
+.tbl{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 14px 8px;min-width:0}
+.tbl h3{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 8px}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:right;font-weight:600;padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl.full{grid-column:1/-1}
+table.plays th,table.plays td{text-align:left}
+table.plays td.pk{white-space:normal;min-width:180px;overflow-wrap:anywhere}
+.res{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.res.ganado{background:var(--win-soft);color:var(--win)}.res.perdido{background:var(--loss-soft);color:var(--loss)}.res.nulo{background:var(--sunk);color:var(--push)}.res.pendiente{background:var(--pend-soft);color:var(--pend)}
+tr.sub td:first-child{padding-left:20px;color:var(--muted)}
+tr.tot td{font-weight:600}
+.barcell{width:90px}
+.bar{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--win)}
+.bar i.lo{background:var(--loss)}.bar i.mid{background:var(--honey)}
+.w{color:var(--win)}.l{color:var(--loss)}
+
+/* Añadir */
+.addgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-bottom:40px;max-width:980px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.fields label{display:flex;flex-direction:column;gap:4px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:20px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;background:var(--bg)}
+.drop.over{border-color:var(--honey);background:var(--honey-soft)}
+.th{position:relative}
+.thx{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:2px solid var(--surface);background:var(--loss);color:#fff;font:700 17px/1 var(--body);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.pastezone{align-self:stretch;min-height:64px;border:1.5px solid var(--honey);border-radius:10px;background:var(--surface);color:var(--muted);padding:14px;font-weight:600;cursor:text;display:flex;align-items:center;justify-content:center;text-align:center;caret-color:transparent;-webkit-user-select:text;user-select:text}
+.pastezone:focus{outline:2px solid var(--honey);outline-offset:2px;background:var(--honey-soft);color:var(--fg)}
+.prev{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.prev img{width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.rows{display:flex;flex-direction:column;gap:10px}
+.toggle{display:flex;align-items:center;gap:8px;font:600 14px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:9px 12px;cursor:pointer;align-self:end}
+.toggle .sw{width:30px;height:18px;border-radius:9px;background:var(--sunk);border:1px solid var(--line);position:relative;flex:none}
+.toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.toggle[aria-pressed="true"]{border-color:var(--honey);background:var(--honey-soft)}
+.toggle[aria-pressed="true"] .sw{background:var(--honey);border-color:var(--honey)}
+.toggle[aria-pressed="true"] .sw::after{left:14px;background:var(--surface)}
+.prow{display:grid;grid-template-columns:140px 170px 110px minmax(0,1fr) 150px 64px 76px 36px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px}
+@media (max-width:820px){.prow{grid-template-columns:1fr 1fr}.prow .ev,.prow .pk{grid-column:1/-1}}
+.status{font-size:14px;color:var(--muted)}
+.game{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center;font-variant-numeric:tabular-nums}
+.game.live{color:var(--fg);font-weight:600}.game.post{color:var(--fg)}
+.livedot{color:var(--loss);font-size:11px;letter-spacing:.05em}
+@media (prefers-reduced-motion:no-preference){.livedot{animation:lmblink 1.6s infinite}}@keyframes lmblink{50%{opacity:.35}}
+.lvst{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.lvst.w{background:var(--win-soft);color:var(--win)}.lvst.l{background:var(--loss-soft);color:var(--loss)}
+.lvnote{font-weight:400;color:var(--muted)}.rnote{flex-basis:100%;font-style:italic;color:var(--muted);font-weight:400}
+.muted{color:var(--muted)}
+.daynav{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;padding-block:20px 6px;max-width:760px;margin:0 auto}
+.daynav #dNext{justify-self:end}.daynav #dPrev{justify-self:start}
+.swipehint{text-align:center;font-size:12.5px;color:var(--muted);padding-bottom:10px}
+@media (hover:hover){.swipehint{display:none}}
+.diapanel{max-width:760px;margin:0 auto 40px;position:static;touch-action:pan-y}
+@media (prefers-reduced-motion:no-preference){.slide-l{animation:lmsl .22s ease-out}.slide-r{animation:lmsr .22s ease-out}}
+@keyframes lmsl{from{transform:translateX(28px);opacity:.4}to{transform:none;opacity:1}}@keyframes lmsr{from{transform:translateX(-28px);opacity:.4}to{transform:none;opacity:1}}
+.legsbox{display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line);padding-left:8px;margin:2px 0}
+.leg{display:grid;grid-template-columns:16px minmax(0,1fr);gap:0 6px;font-size:12.5px;align-items:baseline}
+.leg .legi{color:var(--muted);text-align:center}.leg.ganado .legi{color:var(--win)}.leg.perdido .legi{color:var(--loss)}
+.leg .legt{font-weight:600;overflow-wrap:anywhere}.leg .legs{grid-column:2;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.toastbtn{margin-left:12px;font:700 14px var(--body);background:transparent;border:1px solid currentColor;color:inherit;border-radius:6px;padding:4px 10px;cursor:pointer}
+.toast{display:flex;align-items:center;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+.confirm{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px}
+@media (prefers-reduced-motion:no-preference){.day,.btn,nav.tabs button{transition:background .15s,box-shadow .15s}}
+</style>
+</head>
+<body>
+<section class="login" id="login" hidden>
+  <form id="loginForm">
+    <h1>Las <span>Mieles</span> Picks</h1>
+    <div class="status">Registro interno del equipo.</div>
+    <label class="lbl" for="lEmail">Tu nombre</label><input type="text" id="lEmail" autocomplete="username" maxlength="40" required>
+    <label class="lbl" for="lPass">Contraseña del equipo</label><input type="password" id="lPass" autocomplete="current-password" required>
+    <button class="btn primary" id="lBtn" type="submit">Entrar</button>
+    <div class="status" id="lMsg"></div>
+  </form>
+</section>
+<div id="app" hidden>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Las <span>Mieles</span> Picks<small>Registro interno de picks</small></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-cal" aria-selected="true" data-v="cal">Calendario</button>
+      <button role="tab" id="tab-dia" aria-selected="false" data-v="dia">Picks del día</button>
+      <button role="tab" id="tab-ana" aria-selected="false" data-v="ana">Análisis</button>
+      <button role="tab" id="tab-add" aria-selected="false" data-v="add">Añadir picks</button>
+    </nav>
+    <div class="who"><span id="whoMail"></span><button class="btn ghost" id="logout" style="padding:6px 10px;font-size:13px">Salir</button></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="dbwarn" class="notice" hidden>No se pudo conectar con la base de datos. Revisa tu conexión y recarga la página.</div>
+
+  <div class="monthbar" id="monthbar">
+    <button class="iconbtn" id="prevM" aria-label="Mes anterior">‹</button>
+    <h1 id="mTitle">—</h1>
+    <button class="iconbtn" id="nextM" aria-label="Mes siguiente">›</button>
+    <button class="btn ghost" id="todayBtn">Hoy</button>
+    <span class="pill" id="mCount">0 picks</span>
+  </div>
+
+  <!-- CALENDARIO -->
+  <section id="v-dia" hidden>
+    <div class="daynav">
+      <button class="btn" id="dPrev" aria-label="Día anterior">‹ Anterior</button>
+      <button class="btn ghost" id="dToday">Hoy</button>
+      <button class="btn" id="dNext" aria-label="Día siguiente">Siguiente ›</button>
+    </div>
+    <div class="swipehint">Desliza a la izquierda o a la derecha para cambiar de día</div>
+    <div class="panel diapanel" id="diaPanel"></div>
+  </section>
+  <section id="v-cal">
+    <div class="calgrid">
+      <div>
+        <div class="cal">
+          <div class="dow"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
+          <div class="days" id="days"></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot ganado"></i>Ganado</span><span><i class="dot perdido"></i>Perdido</span>
+          <span><i class="dot nulo"></i>Nulo</span><span><i class="dot pendiente"></i>Pendiente</span>
+          <span><i class="flag"></i>Día importante</span>
+        </div>
+      </div>
+      <aside class="panel" id="dayPanel"></aside>
+    </div>
+  </section>
+
+  <!-- ANÁLISIS -->
+  <section id="v-ana" hidden>
+    <div class="filters">
+      <label><span class="lbl">Periodo</span>
+        <select id="fScope"><option value="month">Mes seleccionado</option><option value="d7">Últimos 7 días</option><option value="d10">Últimos 10 días</option><option value="d30">Últimos 30 días</option><option value="custom">Últimos… (elige los días)</option><option value="all">Todo el histórico</option></select></label>
+      <label id="fDaysWrap" hidden style="min-width:110px;max-width:140px"><span class="lbl">Nº de días</span><input type="number" id="fDays" min="1" step="1" value="15"></label>
+      <label><span class="lbl">Paquete</span><select id="fPkg"></select></label>
+      <label><span class="lbl">Deporte</span><select id="fSport"></select></label>
+      <label><span class="lbl">Tipo de jugada</span><select id="fType"></select></label>
+      <button class="toggle" id="fNoProps" aria-pressed="false"><span class="sw"></span>No contar Player Props</button>
+      <button class="btn" id="refreshRes" style="align-self:end">Actualizar resultados</button>
+      <button class="btn primary" id="exportPdf" style="align-self:end">Exportar PDF</button>
+    </div>
+    <div class="score" id="score"></div>
+    <div class="tables" id="tables"></div>
+  </section>
+
+  <!-- AÑADIR -->
+  <section id="v-add" hidden>
+    <div class="addgrid">
+      <div class="card">
+        <h2>1. Día y paquete</h2>
+        <div class="fields">
+          <label><span class="lbl">Fecha</span><input type="date" id="aDate"></label>
+          <label><span class="lbl">Paquete</span><select id="aPkg"></select></label>
+          <select id="aSec" hidden aria-hidden="true"></select>
+        </div>
+      </div>
+
+      <div class="card" id="photoCard">
+        <h2>2. Sube la foto de los picks</h2>
+        <div class="drop" id="drop">
+          <div>Arrastra aquí las capturas o elige los archivos. Claude lee los picks y los pasa a la lista para que los revises.</div>
+          <div class="row" style="justify-content:center">
+            <label class="btn" for="photoIn">Elegir fotos</label>
+          </div>
+          <div id="pasteZone" class="pastezone" contenteditable="true" role="textbox" aria-label="Pega aquí la foto copiada" inputmode="none" spellcheck="false">📋 Toca aquí y pega la foto (en el móvil mantén pulsado → Pegar; en el PC Ctrl+V)</div>
+          <div class="row" style="justify-content:center">
+            <input type="file" id="photoIn" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+            <button class="btn honey" id="readBtn" disabled>Leer picks</button>
+          </div>
+          <label class="lbl" for="pasteTxt" style="align-self:stretch;text-align:left">O pega aquí el texto de los picks</label>
+          <textarea id="pasteTxt" placeholder="Ej.: Real Madrid vs Getafe – Over 2.5 & Instagram"></textarea>
+          <div class="prev" id="prev"></div>
+          <div class="status" id="readStatus"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2>3. Revisa y guarda</h2>
+          <div class="row"><button class="btn" id="undoBtn" disabled>↶ Deshacer</button><button class="btn ghost danger" id="clearRows" disabled>Borrar todo</button></div></div>
+        <div class="rows" id="rows"><div class="empty" id="rowsEmpty">Todavía no hay picks en la lista. Sube una foto o pega el texto en el paso 2 y pulsa Leer picks.</div></div>
+        <div class="row" style="justify-content:flex-end">
+          <span class="status" id="saveStatus"></span>
+          <button class="btn primary" id="saveBtn" disabled>Guardar picks</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="api.js"></script>
+<script src="mercado.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+const PKGS=[
+ {id:'soccer',name:'Soccer',main:'vip',extra:'pick5',secs:[{id:'vip',name:'Jugada VIP',u:10},{id:'pick5',name:'Picks extras',u:5}]},
+ {id:'exclusiva',name:'Exclusiva',main:'principal',extra:'extra5',secs:[{id:'principal',name:'Exclusiva',u:10},{id:'extra5',name:'Picks extras',u:5}]},
+ {id:'asegurada',name:'Asegurada',secs:[{id:'principal',name:'Asegurada',u:20}]},
+ {id:'props',name:'Player Props',secs:[{id:'principal',name:'Player Prop',u:5}]},
+ {id:'free',name:'Free Pick',secs:[{id:'principal',name:'Free Pick',u:5}]},
+ {id:'instagram',name:'Jugada de Instagram',secs:[{id:'principal',name:'Jugada de Instagram',u:5}]},
+];
+const SPORTS=['MLB','NHL','SOCCER','NBA','UFC','NCAAF','NCAAB','NFL','Otro'];
+const TYPES=['Moneyline','Spread','Over/Under','BTTS','Winner push if tied','Player prop','Combinada','Otro'];
+const RES=[['pendiente','Pendiente'],['ganado','Ganado'],['perdido','Perdido'],['nulo','Nulo']];
+const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const pkgOf=id=>PKGS.find(p=>p.id===id);
+const secName=(p,s)=>{const P=pkgOf(p);const S=P&&P.secs.find(x=>x.id===s);return S?S.name:(s||'');};
+function toast(t,action,ms){const el=$('toast');el.textContent=t;
+  if(action){const b=document.createElement('button');b.className='toastbtn';b.textContent=action.label;b.onclick=()=>{el.hidden=true;action.fn();};el.append(b);}
+  el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,ms||(action?12000:2600));}
+
+const today=(()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date());}catch(e){return ymd(new Date());}})(); // fecha de Miami
+const S={scores:{},scoreAt:{},editing:null,view:'cal',month:today.slice(0,7),sel:today,picks:[],notes:{},all:null,uid:null,
+  scope:'month',fPkg:'',fSport:'',fType:'',rows:[],files:[]};
+let db=null,assets=null,sample=null,user=null,downloads=null,unsubMonth=null;
+
+/* ---------- Pestañas ---------- */
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+function setView(v){S.view=v;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
+  ['cal','dia','ana','add'].forEach(k=>$('v-'+k).hidden=k!==v);
+  $('monthbar').hidden=v==='add'||v==='dia';
+  if(v==='dia'||v==='cal')renderDay();
+  if(v==='ana'){if(S.scope!=='month')loadAll().then(renderAna);else renderAna();}
+}
+
+/* ---------- Mes ---------- */
+function shiftMonth(d){const [y,m]=S.month.split('-').map(Number);const dt=new Date(y,m-1+d,1);setMonth(ymd(dt).slice(0,7));}
+$('prevM').onclick=()=>shiftMonth(-1);$('nextM').onclick=()=>shiftMonth(1);
+$('todayBtn').onclick=()=>{S.sel=today;setMonth(today.slice(0,7),true);};
+function setMonth(m,force){if(m===S.month&&!force){renderAll();return;}S.month=m;
+  if(S.sel.slice(0,7)!==m)S.sel=m+'-01';
+  S.picks=[];subscribeMonth();renderAll();}
+function subscribeMonth(){if(!db)return;if(unsubMonth)unsubMonth();
+  const m=S.month;
+  unsubMonth=db.collection('picks').where('month','==',m).onSnapshot(snap=>{
+    if(m!==S.month)return;
+    S.picks=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll();ensureScores(S.picks);
+  },e=>{console.warn(e);});}
+
+/* ---------- Calendario ---------- */
+function renderAll(){renderCal();renderDay();if(S.view==='ana')renderAna();}
+function renderCal(){
+  const [y,m]=S.month.split('-').map(Number);
+  $('mTitle').textContent=MES[m-1]+' '+y;
+  $('mCount').textContent=S.picks.length+(S.picks.length===1?' pick':' picks');
+  const first=new Date(y,m-1,1);const off=(first.getDay()+6)%7;const dim=new Date(y,m,0).getDate();
+  const cells=Math.ceil((off+dim)/7)*7;let h='';
+  const byDay={};S.picks.forEach(p=>(byDay[p.date]=byDay[p.date]||[]).push(p));
+  for(let i=0;i<cells;i++){const dn=i-off+1;
+    if(dn<1||dn>dim){h+='<div class="day out" aria-hidden="true"></div>';continue;}
+    const ds=S.month+'-'+pad(dn);const list=byDay[ds]||[];const note=S.notes[ds];
+    const cls=['day'];if(ds===today)cls.push('today');if(ds===S.sel)cls.push('sel');if(note)cls.push('important');
+    const order={ganado:0,perdido:1,nulo:2,pendiente:3};
+    const dots=list.slice().sort((a,b)=>order[a.result]-order[b.result]).slice(0,14).map(p=>'<i class="dot '+esc(p.result||'pendiente')+'"></i>').join('');
+    h+='<button class="'+cls.join(' ')+'" data-d="'+ds+'" aria-label="'+dn+' de '+MES[m-1]+', '+list.length+' picks'+(note?', día importante':'')+'">'+
+      '<span class="n"><b>'+dn+'</b>'+(note?'<i class="flag"></i>':'')+'</span>'+
+      (list.length?'<span class="dots">'+dots+'</span><span class="cnt">'+list.length+' pick'+(list.length>1?'s':'')+'</span>':'')+
+      (note?'<span class="nt">'+esc(note.text)+'</span>':'')+'</button>';}
+  $('days').innerHTML=h;
+  $('days').querySelectorAll('.day[data-d]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.d;renderCal();renderDay();
+    $('dayPanel').scrollIntoView({behavior:'smooth',block:'start'});});
+}
+function fmtLong(ds){const d=new Date(ds+'T12:00:00');return DIAS[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()]+' '+d.getFullYear();}
+
+function renderDay(){
+  const host=S.view==='dia'?$('diaPanel'):$('dayPanel'),other=S.view==='dia'?$('dayPanel'):$('diaPanel');if(other)other.innerHTML='';
+  const ds=S.sel;const list=S.picks.filter(p=>p.date===ds).sort((a,b)=>String(b.createdAt||'').slice(0,19).localeCompare(String(a.createdAt||'').slice(0,19))||((a.ord??0)-(b.ord??0)));const note=S.notes[ds];
+  const st=stats(list);
+  let h='<div><div class="lbl">Día seleccionado</div><h2>'+fmtLong(ds)+'</h2></div>';
+  h+='<div class="notebox"><span class="lbl">Nota del día '+(note?'· marcado como importante':'')+'</span>'+
+     '<textarea id="noteTxt" placeholder="Ej.: Final de España, pick especial para la comunidad…">'+esc(note?note.text:'')+'</textarea>'+
+     '<div class="row"><button class="btn honey" id="noteSave">'+(note?'Guardar nota':'Marcar día importante')+'</button>'+
+     (note?'<button class="btn ghost danger" id="noteDel">Quitar nota</button>':'')+'</div></div>';
+  h+='<div class="row" style="justify-content:space-between"><span class="lbl">Picks del día ('+list.length+')</span>'+
+     (list.length?'<span class="pill">'+st.w+'-'+st.l+'-'+st.p+(st.pct!=null?' · '+st.pct.toFixed(0)+'%':'')+'</span>':'')+'</div>';
+  if(!list.length){h+='<div class="empty">No hay picks registrados este día. <button class="btn" id="goAdd" style="margin-top:8px">Añadir picks para este día</button></div>';}
+  else{
+    const pkgOrder=[];list.forEach(x=>{const P=pkgOf(x.package);if(P&&!pkgOrder.includes(P))pkgOrder.push(P);});
+    pkgOrder.forEach(P=>{const pl=list.filter(x=>x.package===P.id);if(!pl.length)return;
+      h+='<div class="pkgblock"><h3>'+esc(P.name)+'<span class="pill">'+pl.length+'</span></h3>';
+      pl.forEach(p=>{h+=pickCard(p);});h+='</div>';});
+    const other=list.filter(x=>!pkgOf(x.package));
+    if(other.length){h+='<div class="pkgblock"><h3>Otros</h3>'+other.map(pickCard).join('')+'</div>';}
+  }
+  host.innerHTML=h;
+  $('noteSave').onclick=saveNote;if($('noteDel'))$('noteDel').onclick=delNote;
+  if($('goAdd'))$('goAdd').onclick=()=>{$('aDate').value=ds;setView('add');};
+  host.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{S.editing=b.dataset.ed;renderDay();const f=$('e-pick');if(f)f.focus();});
+  if($('e-save')){const id=$('e-save').closest('[data-edit]').dataset.edit;$('e-save').onclick=()=>saveEdit(id);
+    $('e-cancel').onclick=()=>{S.editing=null;renderDay();};
+    $('e-pkg').onchange=e=>{const x=PKSEC.find(z=>z[0]===e.target.value);if(x)$('e-units').value=x[2];};}
+  host.querySelectorAll('[data-res]').forEach(b=>b.onclick=()=>setResult(b.dataset.id,b.dataset.res));
+  host.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    const box=b.parentElement;box.innerHTML='<span>¿Borrar este pick?</span><button class="btn danger" data-yes="'+b.dataset.del+'">Borrar</button><button class="btn ghost" data-no>Cancelar</button>';
+    box.querySelector('[data-yes]').onclick=()=>delPick(b.dataset.del);box.querySelector('[data-no]').onclick=renderDay;});
+}
+function editForm(p){const id=esc(p.id);
+  return '<div class="pick '+esc(p.result||'pendiente')+'" data-edit="'+id+'">'+
+   '<label class="lbl" for="e-date">Fecha</label><input type="date" id="e-date" value="'+esc(p.date)+'">'+
+   '<label class="lbl" for="e-pkg">Paquete</label><select id="e-pkg">'+pkgOpts(p.package+':'+p.section)+'</select>'+
+   '<label class="lbl" for="e-pick">Jugada</label><input id="e-pick" value="'+esc(p.pick)+'">'+
+   '<label class="lbl" for="e-event">Partido (opcional, ayuda a encontrar el marcador)</label><input id="e-event" placeholder="Ej.: Portland Trail Blazers vs Los Angeles Lakers" value="'+esc(p.event||'')+'">'+
+   '<div class="row"><select id="e-sport" aria-label="Deporte" style="flex:1 1 120px">'+opt(SPORTS,p.sport)+'</select>'+
+   '<select id="e-type" aria-label="Tipo de jugada" style="flex:1 1 140px">'+opt(TYPES,p.betType)+'</select>'+
+   '<input id="e-units" type="number" min="0" step="0.5" aria-label="Unidades" value="'+esc(p.units)+'" style="flex:0 0 80px"><input id="e-odds" aria-label="Cuota americana" placeholder="Cuota -110" value="'+esc(fmtOdds(p.odds))+'" style="flex:0 0 100px"></div>'+
+   '<div class="row"><button class="btn primary" id="e-save">Guardar cambios</button><button class="btn ghost" id="e-cancel">Cancelar</button></div></div>';}
+async function saveEdit(id){if(!db)return;const date=$('e-date').value;const [pk,sc]=$('e-pkg').value.split(':');const pick=$('e-pick').value.trim();
+  if(!date||!pick){toast('La fecha y la jugada no pueden quedar vacías');return;}
+  $('e-save').disabled=true;
+  try{await db.doc('picks/'+id).update({date,month:date.slice(0,7),package:pk,section:sc,pick,
+    sport:$('e-sport').value,betType:$('e-type').value,units:Number($('e-units').value)||0,odds:toAmerican($('e-odds').value),event:$('e-event').value.trim(),eventAuto:false,mkt:null,game:null,legs:null,matchTries:0,final:null,live:null,resultNote:null,editedAt:new Date().toISOString()});
+    S.editing=null;toast('Pick actualizado');triggerUpdate([id]);
+    if(date!==S.sel){S.sel=date;setMonth(date.slice(0,7));}else renderDay();
+  }catch(e){$('e-save').disabled=false;toast(writeErr(e));}}
+function pickCard(p){if(S.editing===p.id)return editForm(p);const r=p.result||'pendiente';
+  const photos=(p.photos||[]).map(id=>'<a href="'+esc(photoUrl(id))+'" target="_blank" rel="noopener"><img src="'+esc(photoUrl(id))+'" alt="Foto del pick"></a>').join('');
+  return '<div class="pick '+esc(r)+'">'+
+    '<div class="pk">'+esc(p.pick)+'</div>'+gameLine(p)+
+    '<div class="meta"><span style="color:var(--honey);font-weight:600">'+esc(secName(p.package,p.section))+'</span><span>'+esc(p.sport)+'</span><span>'+esc(p.betType)+'</span><span>'+esc(p.units)+' U</span>'+(p.odds!=null&&p.odds!==''?'<span>Cuota '+esc(fmtOdds(p.odds))+'</span>':'')+'</div>'+
+    '<div class="seg">'+RES.map(([k,t])=>'<button class="'+k+(k===r?' on':'')+'" data-res="'+k+'" data-id="'+esc(p.id)+'">'+t+'</button>').join('')+'</div>'+
+    (photos?'<div class="thumbs">'+photos+'</div>':'')+
+    '<div class="confirm"><button class="btn" data-ed="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">Editar</button><button class="btn ghost danger" data-del="'+esc(p.id)+'" style="padding:4px 8px;font-size:12px">Borrar pick</button></div></div>';}
+
+async function setResult(id,res){if(!db)return;try{await db.doc('picks/'+id).update({result:res,autoResult:false,resultNote:null});}catch(e){toast(writeErr(e));}}
+async function delPick(id){if(!db)return;try{await db.doc('picks/'+id).delete();toast('Pick borrado');}catch(e){toast(writeErr(e));}}
+async function saveNote(){if(!db)return;const t=$('noteTxt').value.trim();const ds=S.sel;
+  if(!t){toast('Escribe la nota antes de guardarla');return;}
+  try{await db.doc('notes/'+ds).set({date:ds,month:ds.slice(0,7),text:t,by:S.uid||null,updatedAt:new Date().toISOString()});toast('Nota guardada');}catch(e){toast(writeErr(e));}}
+async function delNote(){if(!db)return;try{await db.doc('notes/'+S.sel).delete();toast('Nota quitada');}catch(e){toast(writeErr(e));}}
+function writeErr(e){if(e&&e.code==='invalid_argument')return 'No tienes permiso para guardar cambios en esta página';
+  if(e&&e.code==='quota_exceeded')return 'La base de datos está llena';return 'No se pudo guardar. Inténtalo de nuevo.';}
+
+/* ---------- Análisis ---------- */
+/* Cuotas: siempre en formato americano */
+function toAmerican(v){if(v==null||v==='')return null;const s=String(v).trim().replace(',','.');const n=parseFloat(s);if(!isFinite(n)||n===0)return null;
+  if(Math.abs(n)>=100)return Math.round(n);
+  if(n>1&&n<100)return n>=2?Math.round((n-1)*100):Math.round(-100/(n-1));
+  return null;}
+function fmtOdds(o){return o==null||o===''?'':(Number(o)>0?'+'+Number(o):String(o));}
+function profitOf(x){const o=Number(x.odds),u=Number(x.units)||0;return o>0?u*o/100:u*100/-o;}
+function stats(list){let w=0,l=0,p=0,pend=0,uw=0,ul=0,net=0,staked=0,noOdds=0;
+  list.forEach(x=>{const u=Number(x.units)||0;const r=x.result||'pendiente';const has=x.odds!=null&&x.odds!==''&&Number(x.odds)!==0;
+    if(r==='ganado'){w++;uw+=u;if(has){net+=profitOf(x);staked+=u;}else noOdds++;}
+    else if(r==='perdido'){l++;ul+=u;if(has){net-=u;staked+=u;}else noOdds++;}
+    else if(r==='nulo')p++;else pend++;});
+  const dec=w+l;return{n:list.length,w,l,p,pend,uw,ul,net,staked,noOdds,roi:staked?net/staked*100:null,pct:dec?w/dec*100:null};}
+function fillSel(el,opts,allLabel,val){el.innerHTML='<option value="">'+allLabel+'</option>'+opts.map(([v,t])=>'<option value="'+esc(v)+'">'+esc(t)+'</option>').join('');el.value=val;}
+function initFilters(){
+  fillSel($('fPkg'),PKGS.flatMap(p=>p.secs.length>1?[[p.id,p.name+' (todo)'],...p.secs.map(s=>[p.id+':'+s.id,p.name+' · solo '+s.name])]:[[p.id,p.name]]),'Todos los paquetes','');
+  fillSel($('fSport'),SPORTS.map(s=>[s,s]),'Todos los deportes','');
+  fillSel($('fType'),TYPES.map(s=>[s,s]),'Todos los tipos','');
+  $('fScope').onchange=async e=>{S.scope=e.target.value;$('fDaysWrap').hidden=S.scope!=='custom';if(S.scope!=='month')await loadAll();renderAna();};
+  let dT;$('fDays').oninput=()=>{clearTimeout(dT);dT=setTimeout(renderAna,250);};
+  $('fPkg').onchange=e=>{S.fPkg=e.target.value;renderAna();};
+  $('fSport').onchange=e=>{S.fSport=e.target.value;renderAna();};
+  $('fType').onchange=e=>{S.fType=e.target.value;renderAna();};
+  $('exportPdf').onclick=exportPdf;
+  $('refreshRes').onclick=()=>{triggerUpdate();toast('Buscando marcadores y resultados. Tarda alrededor de un minuto.');S.scoreAt={};setTimeout(()=>{if(S.view==='ana'&&S.scope!=='month')loadAll().then(renderAna);},60000);};
+  try{S.noProps=localStorage.getItem('noProps')==='1';}catch(e){}
+  $('fNoProps').setAttribute('aria-pressed',!!S.noProps);
+  $('fNoProps').onclick=()=>{S.noProps=!S.noProps;$('fNoProps').setAttribute('aria-pressed',S.noProps);try{localStorage.setItem('noProps',S.noProps?'1':'0');}catch(e){}renderAna();};
+}
+function aggRows(list,keyFn,order){const g={};list.forEach(x=>{const k=keyFn(x)||'Sin dato';(g[k]=g[k]||[]).push(x);});
+  return Object.keys(g).sort((a,b)=>{const ia=order?order.indexOf(a):-1,ib=order?order.indexOf(b):-1;if(ia!==-1||ib!==-1)return (ia===-1?99:ia)-(ib===-1?99:ib);return g[b].length-g[a].length;})
+    .map(k=>{const s=stats(g[k]);return [k,s.n,s.w+'-'+s.l+'-'+s.p,s.pct!=null?s.pct.toFixed(1)+'%':'—','+'+s.uw+' / -'+s.ul,s.pend||''];});}
+async function exportPdf(){
+  const btn=$('exportPdf');
+  if(!downloads){toast('La descarga no está disponible en esta vista');return;}
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('No se pudo cargar el generador de PDF. Recarga la página.');return;}
+  const A=S.lastAna;if(!A||!A.list.length){toast('No hay jugadas con estos filtros');return;}
+  btn.disabled=true;btn.textContent='Generando…';
+  try{
+    const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'a4'});
+    const clean=s=>String(s??'').replace(/[^\x00-\xFF]/g,'').replace(/\s+/g,' ').trim();
+    const W=doc.internal.pageSize.getWidth();let y=48;
+    doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(30,90,60);doc.text('Las Mieles Picks',40,y);
+    doc.setFontSize(12);doc.setTextColor(90,106,96);doc.text('Análisis de picks',40,y+18);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text('Generado el '+new Date().toLocaleDateString('es-ES'),W-40,y,{align:'right'});
+    y+=40;
+    const sel=id=>$(id).selectedOptions[0]?$(id).selectedOptions[0].text:'';
+    const filt=['Periodo: '+clean(A.period),'Paquete: '+clean(sel('fPkg')),'Deporte: '+clean(sel('fSport')),'Tipo: '+clean(sel('fType'))];
+    if(S.noProps&&S.fPkg!=='props')filt.push('Sin Player Props');
+    doc.setTextColor(22,33,27);doc.setFontSize(10);doc.text(filt.join('   |   '),40,y,{maxWidth:W-80});y+=22;
+    const st=A.st;
+    doc.autoTable({startY:y,theme:'plain',styles:{fontSize:10,cellPadding:4},headStyles:{textColor:[90,106,96],fontStyle:'bold'},bodyStyles:{fontSize:14,fontStyle:'bold'},
+      head:[['Picks','G-P-N','Acierto','Unidades (+/-)','Neto','ROI','Pend.']],
+      body:[[st.n,st.w+'-'+st.l+'-'+st.p,st.pct!=null?st.pct.toFixed(1)+'%':'—','+'+st.uw+' / -'+st.ul,st.staked?(st.net>=0?'+':'')+st.net.toFixed(2)+' U':'—',st.roi!=null?st.roi.toFixed(1)+'%':'—',st.pend]],margin:{left:40,right:40}});
+    y=doc.lastAutoTable.finalY+16;
+    const H=[['','Picks','G-P-N','Acierto','Unidades','Pend.']];
+    const tbl=(title,body)=>{if(!body.length)return;doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(22,33,27);
+      if(y>740){doc.addPage();y=48;}doc.text(title,40,y);
+      doc.autoTable({startY:y+6,head:H,body:body.map(r=>r.map(clean)),theme:'striped',styles:{fontSize:9,cellPadding:4},headStyles:{fillColor:[30,90,60]},
+        columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right'},5:{halign:'right'}},margin:{left:40,right:40}});
+      y=doc.lastAutoTable.finalY+20;};
+    const pk=[];PKGS.forEach(P=>{const pl=A.list.filter(x=>x.package===P.id);if(!pl.length)return;
+      pk.push(aggRows(pl,()=>P.name)[0]);if(P.secs.length>1)P.secs.forEach(s=>{const sl=A.list.filter(x=>x.package===P.id&&x.section===s.id);if(sl.length){const r=aggRows(sl,()=>'   '+s.name)[0];pk.push(r);}});});
+    tbl('Por paquete',pk);tbl('Por deporte',aggRows(A.list,x=>x.sport,SPORTS));tbl('Por tipo de jugada',aggRows(A.list,x=>x.betType,TYPES));
+    const RL={ganado:'Ganado',perdido:'Perdido',nulo:'Nulo',pendiente:'Pendiente'};
+    const sorted=A.list.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+    if(y>700){doc.addPage();y=48;}
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('Jugadas ('+sorted.length+')',40,y);
+    const resColor={Ganado:[29,130,72],Perdido:[191,59,38],Nulo:[123,134,128],Pendiente:[74,110,168]};
+    doc.autoTable({startY:y+6,head:[['Fecha','Paquete','Deporte','Jugada','Tipo','U','Cuota','Resultado']],
+      body:sorted.map(x=>{const d=x.date.split('-');return [d[2]+'/'+d[1]+'/'+d[0],secName(x.package,x.section)||(pkgOf(x.package)||{}).name||'',x.sport,x.pick,x.betType,x.units,fmtOdds(x.odds),RL[x.result||'pendiente']].map(clean);}),
+      theme:'striped',styles:{fontSize:8.5,cellPadding:3.5,overflow:'linebreak'},headStyles:{fillColor:[30,90,60]},columnStyles:{0:{cellWidth:58},3:{cellWidth:170},5:{halign:'right',cellWidth:24},6:{halign:'right',cellWidth:40}},
+      didParseCell:h=>{if(h.section==='body'&&h.column.index===7){const c=resColor[h.cell.raw];if(c){h.cell.styles.textColor=c;h.cell.styles.fontStyle='bold';}}},margin:{left:40,right:40}});
+    const n=doc.internal.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(120);doc.text('Las Mieles Picks · uso interno · página '+i+' de '+n,W/2,820,{align:'center'});}
+    const slug=clean(A.period).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    await downloads.save({filename:'analisis-picks-'+(slug||'periodo')+'.pdf',data:doc.output('blob')});
+    toast('PDF listo');
+  }catch(e){if(e&&e.code==='declined'){}else toast(e&&e.code==='rate_limited'?'Ya hay una descarga abierta. Termínala e inténtalo otra vez.':'No se pudo generar el PDF');console.warn(e);}
+  finally{btn.disabled=false;btn.textContent='Exportar PDF';}}
+async function loadAll(){if(!db)return;$('score').innerHTML='<div class="status">Cargando todo el histórico…</div>';
+  try{const s=await db.collection('picks').get();S.all=s.docs.map(d=>({id:d.id,...d.data()}));}catch(e){S.all=[];toast('No se pudo cargar el histórico');}}
+function pctCell(pct){if(pct==null)return '<td>—</td><td class="barcell"><div class="bar"></div></td>';
+  const c=pct>=60?'':pct>=50?'mid':'lo';
+  return '<td>'+pct.toFixed(1)+'%</td><td class="barcell"><div class="bar"><i class="'+c+'" style="width:'+Math.max(2,pct).toFixed(0)+'%"></i></div></td>';}
+function rowHtml(label,st,cls){return '<tr class="'+(cls||'')+'"><td>'+esc(label)+'</td><td>'+st.n+'</td><td><span class="w">'+st.w+'</span>-<span class="l">'+st.l+'</span>-'+st.p+'</td>'+pctCell(st.pct)+'<td>'+(st.pend||'')+'</td></tr>';}
+const THEAD='<thead><tr><th></th><th>Picks</th><th>G-P-N</th><th>Acierto</th><th></th><th>Pend.</th></tr></thead>';
+function groupTable(title,list,keyFn,order){
+  const g={};list.forEach(x=>{const k=keyFn(x)||'Sin dato';(g[k]=g[k]||[]).push(x);});
+  let keys=Object.keys(g);keys.sort((a,b)=>{const ia=order?order.indexOf(a):-1,ib=order?order.indexOf(b):-1;
+    if(ia!==-1||ib!==-1)return (ia===-1?99:ia)-(ib===-1?99:ib);return g[b].length-g[a].length;});
+  if(!keys.length)return '';
+  return '<div class="tbl"><h3>'+title+'</h3><div class="tscroll"><table>'+THEAD+'<tbody>'+keys.map(k=>rowHtml(k,stats(g[k]))).join('')+'</tbody></table></div></div>';}
+function renderAna(){
+  const nDays=S.scope==='custom'?Math.max(1,parseInt($('fDays').value,10)||1):S.scope.startsWith('d')?parseInt(S.scope.slice(1),10):0;
+  let base=S.scope==='month'?S.picks:(S.all||[]);
+  if(nDays){const from=new Date();from.setDate(from.getDate()-(nDays-1));const f=ymd(from);base=base.filter(x=>x.date>=f&&x.date<=today);}
+  const list=base.filter(x=>!(S.noProps&&x.package==='props'&&S.fPkg!=='props')&&(!S.fPkg||(S.fPkg.includes(':')?x.package+':'+x.section===S.fPkg:x.package===S.fPkg))&&(!S.fSport||x.sport===S.fSport)&&(!S.fType||x.betType===S.fType));
+  const st=stats(list);
+  const period=S.scope==='all'?'todo el histórico':nDays?'los últimos '+nDays+(nDays===1?' día':' días'):$('mTitle').textContent;
+  S.lastAna={list,st,period};ensureScores(list);
+  $('score').innerHTML=
+    '<div class="tile"><div class="v">'+st.n+'</div><div class="s">Picks en '+esc(period)+'</div></div>'+
+    '<div class="tile"><div class="v rec"><span class="w">'+st.w+'</span>-<span class="l">'+st.l+'</span>-'+st.p+'</div><div class="s">Ganados, perdidos y nulos</div></div>'+
+    '<div class="tile"><div class="v">'+(st.pct!=null?st.pct.toFixed(1)+'%':'—')+'</div><div class="s">Acierto (sin contar nulos ni pendientes)</div></div>'+
+    '<div class="tile"><div class="v"><span class="w">+'+st.uw+'</span> / <span class="l">-'+st.ul+'</span></div><div class="s">Unidades en picks ganados / perdidos</div></div>'+
+    '<div class="tile"><div class="v '+(st.net>=0?'w':'l')+'">'+(st.staked?(st.net>=0?'+':'')+st.net.toFixed(2)+' U':'—')+'</div><div class="s">Ganancia neta con cuotas'+(st.roi!=null?' · ROI '+st.roi.toFixed(1)+'%':'')+(st.noOdds?' · '+st.noOdds+' sin cuota no cuentan':'')+'</div></div>'+
+    '<div class="tile"><div class="v">'+st.pend+'</div><div class="s">Pendientes de resultado</div></div>';
+  if(!list.length){$('tables').innerHTML='<div class="empty">No hay picks con estos filtros. Cambia de mes o de filtro, o añade picks en la pestaña Añadir picks.</div>';return;}
+  // Por paquete con secciones
+  let t='<div class="tbl"><h3>Por paquete</h3><div class="tscroll"><table>'+THEAD+'<tbody>';
+  PKGS.forEach(P=>{const pl=list.filter(x=>x.package===P.id);if(!pl.length)return;
+    t+=rowHtml(P.name,stats(pl),'tot');
+    if(P.secs.length>1)P.secs.forEach(s=>{const sl=pl.filter(x=>x.section===s.id);if(sl.length)t+=rowHtml(s.name,stats(sl),'sub');});});
+  t+='</tbody></table></div></div>';
+  let html=t+groupTable('Por deporte',list,x=>x.sport,SPORTS)+groupTable('Por tipo de jugada',list,x=>x.betType,TYPES);
+  const sorted=list.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  const RL={ganado:'Ganado',perdido:'Perdido',nulo:'Nulo',pendiente:'Pendiente'};
+  const plays='<div class="tbl full"><h3>Jugadas ('+sorted.length+')</h3><div class="tscroll"><table class="plays"><thead><tr><th>Fecha</th><th>Paquete</th><th>Deporte</th><th>Jugada</th><th>Partido</th><th>Tipo</th><th>U</th><th>Cuota</th><th>Resultado</th></tr></thead><tbody>'+
+    sorted.map(x=>{const r=x.result||'pendiente';const d=new Date(x.date+'T12:00:00');
+      return '<tr><td>'+d.getDate()+' '+MES[d.getMonth()].slice(0,3)+'</td><td>'+esc(secName(x.package,x.section)||(pkgOf(x.package)||{}).name||'')+'</td><td>'+esc(x.sport)+'</td><td class="pk">'+esc(x.pick)+'</td><td class="pk">'+gameLine(x,true)+'</td><td>'+esc(x.betType)+'</td><td>'+esc(x.units)+'</td><td>'+esc(fmtOdds(x.odds))+'</td><td><span class="res '+esc(r)+'">'+RL[r]+'</span></td></tr>';}).join('')+
+    '</tbody></table></div></div>';
+  if(S.scope==='all')html+=groupTable('Por mes',list,x=>{const [y,m]=(x.month||'').split('-');return m?MES[+m-1]+' '+y:'Sin dato';});
+  $('tables').innerHTML=html+plays;
+}
+
+/* ---------- Añadir ---------- */
+function initAdd(){
+  $('aDate').value=today;
+  $('aPkg').innerHTML='<option value="auto">Automático (Claude los separa por paquete)</option>'+PKGS.map(p=>'<option value="'+p.id+'">Todo es '+esc(p.name)+'</option>').join('');$('aPkg').value='auto';
+  const syncSec=()=>{const P=pkgOf($('aPkg').value);if(!P){$('aSec').innerHTML='<option value="auto">auto</option>';return;}$('aSec').innerHTML=P.extra?'<option value="mix">mix</option>':'<option value="'+P.secs[0].id+'">'+esc(P.secs[0].name)+'</option>';};
+  $('aPkg').onchange=()=>{syncSec();};syncSec();
+  $('photoIn').onchange=e=>setFiles([...e.target.files]);
+  const dr=$('drop');
+  dr.ondragover=e=>{e.preventDefault();dr.classList.add('over');};dr.ondragleave=()=>dr.classList.remove('over');
+  dr.ondrop=e=>{e.preventDefault();dr.classList.remove('over');setFiles([...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')));};
+  const pastedImages=e=>{const cd=e.clipboardData;if(!cd)return [];let f=[...(cd.files||[])].filter(x=>x.type.startsWith('image/'));
+    if(!f.length)f=[...(cd.items||[])].filter(it=>it.kind==='file'&&it.type.startsWith('image/')).map(it=>it.getAsFile()).filter(Boolean);
+    return f.map((x,i)=>x.name&&x.name!=='image.png'?x:new File([x],'foto-pegada-'+Date.now()+'-'+i+'.'+((x.type.split('/')[1]||'png').replace('jpeg','jpg')),{type:x.type}));};
+  const PZ=$('pasteZone'),PZT=PZ.textContent;
+  PZ.addEventListener('paste',e=>{e.preventDefault();e.stopPropagation();const f=pastedImages(e);
+    if(f.length){setFiles(S.files.concat(f));toast(f.length>1?f.length+' fotos pegadas':'Foto pegada');}
+    else toast('No hay ninguna foto copiada. Copia la imagen y vuelve a pegar.');
+    PZ.textContent=PZT;PZ.blur();});
+  PZ.addEventListener('beforeinput',e=>{if(e.inputType!=='insertFromPaste')e.preventDefault();});
+  PZ.addEventListener('drop',e=>e.preventDefault());
+  document.addEventListener('paste',e=>{if(S.view!=='add')return;const f=pastedImages(e);if(f.length){e.preventDefault();setFiles(S.files.concat(f));toast('Foto pegada');}});
+  $('readBtn').onclick=readPhotos;
+  $('undoBtn').onclick=undoRows;$('clearRows').onclick=clearRows;
+  $('pasteTxt').oninput=()=>{$('readBtn').disabled=!sample||(!S.files.length&&!$('pasteTxt').value.trim());};
+  $('saveBtn').onclick=savePicks;
+}
+function curPkg(){const v=$('aPkg').value;return pkgOf(v)?v:'soccer';}
+function curSec(){const P=pkgOf($('aPkg').value);if(!P)return 'pick5';const v=$('aSec').value;return v==='mix'?P.extra:v;}
+function curUnits(){const P=pkgOf(curPkg());const s=P.secs.find(x=>x.id===curSec());return s?s.u:5;}
+function blankRow(){return{sport:'SOCCER',event:'',pick:'',betType:$('aPkg').value==='props'?'Player prop':'Moneyline',pkg:curPkg(),sec:curSec(),units:curUnits()};}
+/* Reparto automático de un pick sin emoji */
+function autoPlace(row){const sel=$('aPkg').value;const U=(p,s)=>pkgOf(p).secs.find(x=>x.id===s).u;
+  const set=(p,s)=>{row.pkg=p;row.sec=s;row.units=(row.readU&&(s==='pick5'||s==='extra5'))?row.readU:U(p,s);};
+  if(sel==='auto'||sel==='soccer'||sel==='exclusiva'||sel==='asegurada'){
+    if(row.betType==='Player prop')return set('props','principal');
+    if(sel==='exclusiva')return set('exclusiva','extra5');
+    if(row.sport==='SOCCER')return set('soccer','pick5');
+    return set('exclusiva','extra5');}
+  const P=pkgOf(sel);set(sel,P.extra||P.secs[0].id);}
+const PKSEC=PKGS.flatMap(P=>P.secs.map(s=>[P.id+':'+s.id,P.secs.length>1?P.name+' · '+s.name:P.name,s.u]));
+function pkgOpts(v){return PKSEC.map(([k,t])=>'<option value="'+k+'"'+(k===v?' selected':'')+'>'+esc(t)+'</option>').join('');}
+function setFiles(f){S.files=f;$('prev').innerHTML='';f.forEach((file,idx)=>{const w=document.createElement('div');w.className='th';
+    const i=document.createElement('img');i.alt='Foto subida';i.src=URL.createObjectURL(file);
+    const x=document.createElement('button');x.type='button';x.className='thx';x.setAttribute('aria-label','Quitar esta foto');x.textContent='×';
+    x.onclick=()=>{const n=S.files.slice();n.splice(idx,1);try{$('photoIn').value='';}catch(e){}setFiles(n);};
+    w.append(i,x);$('prev').append(w);});
+  $('readBtn').disabled=(!f.length&&!($('pasteTxt').value||'').trim())||!sample;$('readStatus').textContent=f.length?f.length+(f.length>1?' fotos listas':' foto lista'):'';}
+async function readPhotos(){
+  const txt=($('pasteTxt').value||'').trim();
+  if(!sample||(!S.files.length&&!txt))return;
+  let files=[];
+  if(S.files.length){let lim=null;try{lim=await sample.limits();}catch(e){}
+    if(!lim||!lim.images){$('readStatus').textContent='En esta vista no se pueden leer fotos. Pega el texto de los picks en el paso 2.';return;}
+    files=S.files.slice(0,lim.images.maxCount);}
+  $('readBtn').disabled=true;$('readStatus').textContent='Leyendo los picks de la foto…';
+  const P=pkgOf($('aPkg').value)||{name:'varios paquetes mezclados'};
+  const prompt=(files.length?'Estas imágenes son capturas':'Este texto contiene los')+(files.length&&txt?' (y el texto de abajo también contiene picks)':'')+' de picks (pronósticos deportivos) que envía la marca Las Mieles Picks a sus clientes. Paquete: "'+P.name+'".\n'+
+   'Extrae cada pick que aparezca. Responde SOLO con un array JSON de objetos con esta forma:\n'+
+   '{"sport": uno de '+JSON.stringify(SPORTS)+', "event": "el partido al que pertenece el pick, como Equipo A vs Equipo B (o Luchador A vs Luchador B); si no aparece en la imagen o el texto, dedúcelo si es obvio o pon cadena vacía", "pick": "la jugada copiada tal como aparece escrita en la imagen o el texto, con los mismos equipos, jugador, línea y mercado (p. ej. Como vs Torino Over 2.5, Cairo Santos over 1.5 Field Goals Made, Blackhawks +1.5); solo quita los emojis y las marcas de paquete o unidades (& Lock, & VIP, & Instagram, &3, 3 units)", "betType": uno de '+JSON.stringify(TYPES)+', "star": true si el pick lleva una estrella (⭐ ★ 🌟 ☆) al lado, si no false, "lock": true si el pick lleva un candado (🔒 🔐) al lado, si no false, "trophy": true si el pick lleva una copa o trofeo (🏆) al lado, si no false, "gem": true si el pick lleva una joya o diamante (💎) al lado, si no false, "free": true si el pick está marcado como Free Pick o pick gratis, si la imagen es un gráfico de Free Pick (pone FREE PICK en el título o cabecera; entonces todos sus picks son free), o si la imagen es la captura de una app de casa de apuestas (una tarjeta de apuesta con Wager, Payout, la cuota y el partido, sin el diseño ni las etiquetas de Las Mieles; entonces todos los picks de esa captura son free), si no false, "date": "AAAA-MM-DD" si junto al pick o encima de su grupo aparece la fecha del partido, si no null, "units": número de unidades si aparece, o null, "odds": la cuota del pick tal como aparece (americana como -110 o +150, o decimal como 1.91), o null si no aparece}\n'+
+   '- Cuota: no confundas la cuota con la línea del pick (en "Over 2.5 -115" la línea es 2.5 y la cuota -115; en "Warriors -4.5 (-110)" el spread es -4.5 y la cuota -110). Quita la cuota del texto de "pick".\n'+
+   'Reglas:\n'+
+   '- Lee la imagen de arriba abajo y devuelve TODOS los picks, uno por objeto, en el mismo orden. Cada línea o bloque con su propio partido o jugada es un pick distinto, aunque sea del mismo partido o del mismo tipo. Cuenta los picks antes de responder y no te saltes ninguno.\n'+
+   '- Over/Under: cualquier jugada con Over, Under, O, U, Más de, Menos de, Alta o Baja seguida de una línea (2.5, 9.5, 210.5…) es betType "Over/Under", sea de goles, córners, tarjetas, puntos, carreras o de un jugador (si es de un jugador concreto usa "Player prop"). Copia la línea exacta en "pick", p. ej. "Over 2.5 goles" o "Under 9.5 córners".\n'+
+   '- Estrella: si un pick tiene una estrella, pon "star": true. Candado o Lock: si tiene un candado, o si en el texto junto al pick pone "& Lock" o "Lock", pon "lock": true y deja en "pick" solo la jugada. Solo esos picks son de La Asegurada. Copa o VIP: si tiene una copa o trofeo 🏆, o si en el texto junto al pick pone "& VIP", pon "trophy": true y deja en "pick" solo la jugada (es la Jugada VIP de Soccer). Joya o Instagram: si tiene una joya o diamante 💎, o si junto al pick pone "Instagram" (por ejemplo "Over 2.5 & Instagram"), pon "gem": true y deja en "pick" solo la jugada, sin la palabra Instagram. En la misma foto pueden venir picks con icono y picks extras sin icono: devuélvelos todos. Mira el icono de cada pick por separado.\n'+
+   '- Player props: cualquier jugada sobre un jugador concreto (goles, tiros, asistencias, puntos, rebotes, strikeouts… de un jugador) es betType "Player prop", también en fútbol. Pon bien "sport" en cada pick.\n'+
+   '- Unidades: si junto a un pick pone cuántas unidades lleva (en la foto suele poner "3 units"; en el texto suele poner "&3" pegado al pick; también 3U, 3 unidades, Stake 3…), pon ese número en "units" y quita esa marca de "pick". Si no lo pone, "units": null.\n'+
+   '- Fecha: si aparece una fecha para un pick o un grupo de picks (25/10, Oct 25, 10-25-2026, sábado 25…), ponla en "date" como AAAA-MM-DD. Si no trae año, usa el año de la fecha de referencia '+$('aDate').value+'. Las palabras Active, Inactive, Activo o Inactivo no son parte del pick ni de la fecha: ignóralas y no las copies.\n'+
+   '- Tipos: ML, Moneyline o ganador del partido = "Moneyline". Spread, hándicap o línea con +/- a un equipo (Blackhawks +1.5, Warriors -4.5) = "Spread". Ambos marcan o BTTS = "BTTS". Empate no apuesta, DNB o Draw No Bet = "Winner push if tied".\n'+
+   '- No inventes picks. Si una combinada tiene varias selecciones, haz un solo objeto con betType "Combinada" y todas las selecciones en "pick". Ignora cuotas. Si no hay picks, devuelve [].\n'+
+   '- Deporte: en la imagen o el texto, arriba de cada grupo de picks hay una etiqueta con el deporte (MLB, NHL, SOCCER, NBA, UFC, NCAAF, NCAAB, NFL). Usa esa etiqueta como "sport" para todos los picks que vengan debajo, hasta la siguiente etiqueta. Fútbol es SOCCER; NCAAF es fútbol americano universitario y NCAAB baloncesto universitario. Si no hay etiqueta, dedúcelo por los equipos.\n'+
+   'Ejemplo: [{"sport":"SOCCER","pick":"BTTS","betType":"BTTS","star":false,"units":5},{"sport":"SOCCER","pick":"Under 2.5 goles","betType":"Over/Under","star":true,"units":null}]'+(txt?'\n\nTEXTO DE LOS PICKS:\n'+txt.slice(0,20000):'');
+  try{
+    const out=await sample.json(prompt,files.length?{images:files}:{});
+    const arr=Array.isArray(out)?out:[];
+    pushUndo();const srcFiles=files.slice();
+    const def=curUnits();
+    const ou=/\b(over|under|o|u)\s?\d|m[aá]s de|menos de|\balta\b|\bbaja\b/i;
+    arr.forEach(o=>{if(!o||!o.pick)return;let pk=String(o.pick);
+      const amp=pk.match(/&\s*(\d+(?:[.,]\d+)?)(?!\s*[.,]?\d)(?:\s*u(?:nits?|nidades)?)?\s*$/i)||pk.match(/\b(\d+(?:[.,]\d+)?)\s*units?\b/i);
+      if(amp&&!Number(o.units))o.units=Number(amp[1].replace(',','.'));
+      if(amp)pk=pk.replace(amp[0],'').trim();
+      let bt=TYPES.includes(o.betType)?o.betType:'Otro';
+      if((bt==='Otro'||/over|under/i.test(String(o.betType)))&&ou.test(pk))bt='Over/Under';
+      if(bt!=='Combinada'&&bt!=='Player prop'){
+        if(/\bML\b|moneyline/i.test(pk))bt='Moneyline';
+        else if(/\bBTTS\b|ambos marcan/i.test(pk))bt='BTTS';
+        else if(/\bDNB\b|draw no bet|empate no apuesta|push if tied/i.test(pk))bt='Winner push if tied';
+        else if(bt==='Otro'&&/spread|h[aá]ndicap|\s[+-]\d/i.test(pk))bt='Spread';}
+      const lock=o.lock===true||/(🔒|🔐)|\block\b/iu.test(pk);
+      const star=!lock&&(o.star===true||/[⭐★🌟☆]/u.test(pk));
+      const row={sport:SPORTS.includes(o.sport)?o.sport:'Otro',event:String(o.event||'').slice(0,120),pick:pk.replace(/[⭐★🌟☆]|🔒|🔐/gu,'').replace(/\s*[&+\-–|y]?\s*\(?\s*lock\s*\)?(?=\s|$)/i,'').trim(),
+        betType:bt,pkg:curPkg(),sec:curSec(),units:Number(o.units)||def,readU:Number(o.units)||0,odds:toAmerican(o.odds),date:/^\d{4}-\d{2}-\d{2}$/.test(String(o.date||''))?o.date:$('aDate').value};
+      const trophy=!lock&&!star&&(o.trophy===true||/🏆|&\s*vip\b/iu.test(pk));
+      const gem=!lock&&!star&&!trophy&&(o.gem===true||/💎|instagram/iu.test(pk));
+      row.pick=row.pick.replace(/🏆|💎/gu,'').replace(/\s*&\s*vip\b/i,'').replace(/\s*[-–(\[]?\s*\b(in)?activ[eo]\b\s*[)\]]?/gi,'').replace(/\s*[&+\-–|y]?\s*\(?\s*(en\s+)?instagram\s*\)?/i,'').trim();
+      if(gem){row.pkg='instagram';row.sec='principal';row.units=5;}
+      else if(trophy){row.pkg='soccer';row.sec='vip';row.units=10;}
+      else if(lock){row.pkg='asegurada';row.sec='principal';row.units=20;}
+      else if(star){row.pkg='exclusiva';row.sec='principal';row.units=10;}
+      else if(o.free===true||/free\s*pick/i.test(pk)){row.pkg='free';row.sec='principal';row.units=5;row.pick=row.pick.replace(/\s*[&+\-–|]?\s*\(?free\s*pick\)?/i,'').trim();}
+      else autoPlace(row);
+      row.files=srcFiles;
+      S.rows.push(row);});
+    if(arr.length){setFiles([]);$('pasteTxt').value='';try{$('photoIn').value='';}catch(e){}}
+    $('readStatus').textContent=arr.length?'Se leyeron '+arr.length+' picks. La foto y el texto se quitaron para no leerlos dos veces. Revisa la lista abajo antes de guardar.':'No encontré picks. Revisa la foto o pega el texto en el paso 2.';
+    renderRows();
+  }catch(e){
+    const m={not_granted:'Tu sesión caducó. Vuelve a entrar.',rate_limited:'Demasiadas lecturas seguidas. Espera un momento e inténtalo otra vez.',
+      image_rejected:'No se pudo abrir esa imagen. Prueba con otra captura (JPG o PNG).',invalid_json:'Claude no devolvió una lista clara. Pulsa "Leer picks" otra vez.',
+      refused:'Claude no pudo leer esta imagen. Pega el texto de los picks en el paso 2.'};
+    $('readStatus').textContent=m[e&&e.code]||'No se pudo leer la foto. Inténtalo de nuevo.';
+  }finally{$('readBtn').disabled=!S.files.length&&!($('pasteTxt').value||'').trim();}
+}
+function opt(list,v){return list.map(x=>'<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>').join('');}
+function renderRows(){
+  const box=$('rows');$('rowsEmpty').hidden=!!S.rows.length;
+  box.querySelectorAll('.prow').forEach(n=>n.remove());
+  S.rows.forEach((r,i)=>{const d=document.createElement('div');d.className='prow';
+    d.innerHTML='<input type="date" id="r'+i+'-date" aria-label="Fecha" value="'+esc(r.date||$('aDate').value)+'">'+'<select id="r'+i+'-pkg" aria-label="Paquete">'+pkgOpts(r.pkg+':'+r.sec)+'</select>'+'<select id="r'+i+'-sport" aria-label="Deporte">'+opt(SPORTS,r.sport)+'</select>'+
+      '<input class="pk" id="r'+i+'-pick" placeholder="Jugada (ej. Más de 2.5 goles)" value="'+esc(r.pick)+'">'+
+      '<select id="r'+i+'-type" aria-label="Tipo de jugada">'+opt(TYPES,r.betType)+'</select>'+
+      '<input id="r'+i+'-units" type="number" min="0" step="0.5" aria-label="Unidades" value="'+esc(r.units)+'">'+
+      '<input id="r'+i+'-odds" aria-label="Cuota americana" placeholder="Cuota" value="'+esc(fmtOdds(r.odds))+'">'+
+      '<button class="iconbtn" aria-label="Quitar pick" id="r'+i+'-rm">×</button>';
+    box.append(d);
+    d.querySelector('#r'+i+'-sport').onchange=e=>r.sport=e.target.value;
+    d.querySelector('#r'+i+'-date').onchange=e=>r.date=e.target.value;
+    d.querySelector('#r'+i+'-pkg').onchange=e=>{const [p,s]=e.target.value.split(':');r.pkg=p;r.sec=s;const x=PKSEC.find(z=>z[0]===e.target.value);if(x){r.units=x[2];d.querySelector('#r'+i+'-units').value=x[2];}};
+    d.querySelector('#r'+i+'-pick').oninput=e=>{r.pick=e.target.value;updSave();};
+    d.querySelector('#r'+i+'-type').onchange=e=>r.betType=e.target.value;
+    d.querySelector('#r'+i+'-units').oninput=e=>r.units=e.target.value;
+    d.querySelector('#r'+i+'-odds').onchange=e=>{r.odds=toAmerican(e.target.value);e.target.value=fmtOdds(r.odds);};
+    d.querySelector('#r'+i+'-rm').onclick=()=>{pushUndo();S.rows.splice(i,1);renderRows();};
+  });updSave();}
+function updSave(){$('saveBtn').disabled=!db||!S.rows.some(r=>String(r.pick).trim());
+  if($('clearRows'))$('clearRows').disabled=!S.rows.length;if($('undoBtn'))$('undoBtn').disabled=!(S.undo&&S.undo.length);}
+/* Deshacer en la lista de picks */
+function pushUndo(){S.undo=S.undo||[];S.undo.push({rows:S.rows.map(r=>({...r})),files:S.files.slice(),txt:$('pasteTxt').value});if(S.undo.length>30)S.undo.shift();}
+function undoRows(){if(!S.undo||!S.undo.length)return;const u=S.undo.pop();S.rows=u.rows;$('pasteTxt').value=u.txt;setFiles(u.files);renderRows();toast('Deshecho');}
+function clearRows(){if(!S.rows.length)return;pushUndo();S.rows=[];renderRows();$('readStatus').textContent='';toast('Lista vaciada',{label:'Deshacer',fn:undoRows},6000);}
+async function savePicks(){
+  const rows=S.rows.filter(r=>String(r.pick).trim());if(!rows.length||!db)return;
+  const date=$('aDate').value;if(!date){toast('Elige la fecha');return;}
+  $('saveBtn').disabled=true;$('saveStatus').textContent='Guardando…';
+  const allFiles=[...new Set(rows.flatMap(r=>r.files||[]))];const fileId=new Map();
+  if(allFiles.length&&assets){
+    for(const f of allFiles){try{const r=await assets.upload(f);fileId.set(f,r.id);}catch(e){console.warn(e);}}
+  }
+  const photos=[...fileId.values()];const savedRows=S.rows.map(r=>({...r}));
+  const col=db.collection('picks');let ok=0;const newIds=[];const now=new Date().toISOString();let ord=0;
+  for(const r of rows){const date=r.date||$('aDate').value;try{await col.add({date,month:date.slice(0,7),package:r.pkg||$('aPkg').value,section:r.sec||curSec(),
+    sport:r.sport,event:String(r.event).trim(),pick:String(r.pick).trim(),betType:r.betType,units:Number(r.units)||0,odds:r.odds??null,
+    result:'pendiente',photos:(r.files||[]).map(f=>fileId.get(f)).filter(Boolean),by:S.uid||null,createdAt:now,ord:ord++}).then(ref=>newIds.push(ref.id));ok++;}catch(e){$('saveStatus').textContent=writeErr(e);}}
+  if(ok){toast('Guardados '+ok+' picks. Buscando sus partidos…',{label:'Deshacer',fn:()=>undoSave(newIds.slice(),savedRows)},15000);triggerUpdate(newIds);
+    const lost=allFiles.length&&!photos.length;S.undo=[];
+    S.rows=[];S.files=[];$('prev').innerHTML='';$('pasteTxt').value='';$('readStatus').textContent='';$('photoIn').value='';renderRows();
+    $('saveStatus').textContent=lost?'Los picks se guardaron, pero las fotos no se pudieron adjuntar.':'';
+    S.sel=date;setView('cal');setMonth(date.slice(0,7),true);}
+  else updSave();
+}
+
+async function undoSave(ids,rows){
+  try{for(const id of ids)await db.doc('picks/'+id).delete();}catch(e){toast(writeErr(e));return;}
+  S.rows=rows;setView('add');renderRows();toast('Guardado deshecho: los picks vuelven a la lista');
+}
+/* ---------- Picks del día: cambiar de día ---------- */
+function goDay(n){
+  const d=new Date(S.sel+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);const ds=d.toISOString().slice(0,10);
+  S.sel=ds;S.editing=null;
+  const host=$('diaPanel');host.classList.remove('slide-l','slide-r');void host.offsetWidth;host.classList.add(n>0?'slide-l':'slide-r');
+  if(ds.slice(0,7)!==S.month)setMonth(ds.slice(0,7));else{renderCal();renderDay();}
+}
+(function(){
+  $('dPrev').onclick=()=>goDay(-1);$('dNext').onclick=()=>goDay(1);
+  $('dToday').onclick=()=>{S.sel=today;S.editing=null;if(today.slice(0,7)!==S.month)setMonth(today.slice(0,7));else renderDay();};
+  let x0=null,y0=null,t0=0;
+  const sw=$('v-dia');
+  sw.addEventListener('touchstart',e=>{if(e.target.closest('input,textarea,select'))return;const t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now();},{passive:true});
+  sw.addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];const dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+    if(Math.abs(dx)>60&&Math.abs(dy)<Math.abs(dx)*0.6&&Date.now()-t0<800)goDay(dx<0?1:-1);},{passive:true});
+  document.addEventListener('keydown',e=>{if(S.view!=='dia'||e.target.closest('input,textarea,select'))return;
+    if(e.key==='ArrowLeft')goDay(-1);else if(e.key==='ArrowRight')goDay(1);});
+})();
+/* ---------- Arranque ---------- */
+initFilters();initAdd();renderAll();
+/* ---------- Marcadores en vivo ---------- */
+S.scores={};S.scoreAt={};
+function triggerUpdate(ids){try{fetch('/.netlify/functions/actualizar-bg',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify(ids&&ids.length?{ids}:{})}).catch(()=>{});}catch(e){}}
+function scoreKey(g){return g.league+'|'+g.ymd;}
+function gameOf(ref){if(!ref||!S.scores)return null;const l=S.scores[scoreKey(ref)];return l?l.find(x=>x.id===ref.id)||null:null;}
+function gameNow(p){return gameOf(p.game);}
+function refsOf(p){return Array.isArray(p.legs)&&p.legs.length?p.legs.map(l=>l.game).filter(Boolean):(p.game?[p.game]:[]);}
+async function ensureScores(list){
+  const need=new Set();
+  (list||[]).forEach(p=>{if(!p)return;if((p.result||'pendiente')!=='pendiente'&&(p.final||p.legs))return;
+    refsOf(p).forEach(r=>{if(!r.league)return;const k=scoreKey(r);if(!S.scoreAt[k]||Date.now()-S.scoreAt[k]>45000)need.add(k);});});
+  if(!need.size)return;
+  await Promise.all([...need].map(async k=>{S.scoreAt[k]=Date.now();const [l,d]=k.split('|');
+    try{const r=await fetch('/api/marcadores?l='+encodeURIComponent(l)+'&d='+d);if(r.ok)S.scores[k]=await r.json();}catch(e){}}));
+  renderDay();if(S.view==='ana')renderAna();
+}
+function horaLocal(iso){try{
+  const d=new Date(iso),tz='America/New_York';
+  const wd=d.toLocaleDateString('es-ES',{weekday:'long',timeZone:tz}),day=d.toLocaleDateString('es-ES',{day:'numeric',timeZone:tz});
+  const pt=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:tz}).formatToParts(d);
+  const h=pt.find(x=>x.type==='hour').value,m=pt.find(x=>x.type==='minute').value,ap=pt.find(x=>x.type==='dayPeriod').value.toLowerCase();
+  return wd+' '+day+', '+h+(m!=='00'?':'+m:'')+ap+' (Miami)';
+}catch(e){return '';}}
+var LIVE_CLS={'va ganando':'w','ya ganado':'w','ganado':'w','va perdiendo':'l','ya perdido':'l','perdido':'l'};
+const LEG_ICON={ganado:'✓',perdido:'✗',nulo:'○'};
+function legLine(l,compact){
+  const g=gameOf(l.game),calc=(window.LMMercado&&g)?LMMercado.evalMkt(l.mkt,g):null,est=calc?calc.e:l.estado;
+  const r=l.result||(/ganado/.test(est||'')?'ganado':/perdido/.test(est||'')?'perdido':est==='nulo'?'nulo':'');
+  let sc;
+  if(g)sc=g.state==='pre'?g.away+' vs '+g.home+' · '+horaLocal(g.start):g.away+' '+g.awayScore+' - '+g.homeScore+' '+g.home+' · '+g.detail;
+  else if(l.final)sc=l.final.score+' · '+(l.final.detail||'Final');
+  else sc=l.game?l.game.name:'buscando partido';
+  const live=g&&g.state==='in';
+  return '<div class="leg '+(r||'')+'"><b class="legi">'+(LEG_ICON[r]||'•')+'</b><span class="legt">'+esc(l.text)+'</span>'+
+    (compact?'':'<span class="legs">'+(live?'<b class="livedot">● </b>':'')+esc(sc)+(est&&!l.result&&!compact&&!/^(ganado|perdido|nulo|sin empezar)$/.test(est)?' · '+esc(est):'')+(calc&&calc.n&&!compact&&g&&g.state==='in'?' · '+esc(calc.n):'')+'</span>')+'</div>';
+}
+function gameLine(p,compact){
+  if(Array.isArray(p.legs)&&p.legs.length){
+    const anyLive=p.legs.some(l=>{const g=gameOf(l.game);return g&&g.state==='in';});
+    const won=p.legs.filter(l=>{const g=gameOf(l.game),c=(window.LMMercado&&g)?LMMercado.evalMkt(l.mkt,g):null;return (l.result||(c&&c.e)||l.estado)==='ganado';}).length;
+    const cs=window.LMMercado?LMMercado.comboStatus(p.legs.map(l=>{if(l.result)return {e:l.result};const g=gameOf(l.game);return g?LMMercado.evalMkt(l.mkt,g):null;})):null;
+    const liveSt=cs?{estado:cs.e,nota:cs.n}:p.live;
+    let h='<div class="game parlay'+(anyLive?' live':'')+'">'+(anyLive?'<b class="livedot">● EN VIVO</b>':'')+'<span class="muted">Combinada · '+p.legs.length+' selecciones'+(won?' · '+won+' acertadas':'')+'</span>';
+    if(liveSt&&anyLive)h+='<span class="lvst '+((LIVE_CLS||{})[liveSt.estado]||'')+'">'+esc(liveSt.estado)+'</span>';
+    h+='</div><div class="legsbox">'+p.legs.map(l=>legLine(l,compact)).join('')+'</div>';
+    if(p.resultNote&&!compact)h+='<div class="game"><span class="rnote">'+(p.autoResult?'Resultado automático: ':'')+esc(p.resultNote)+'</span></div>';
+    return h;
+  }
+  const g=gameNow(p),fin=p.final;
+  if(!p.game&&!p.event)return compact?'<span class="muted">—</span>':'';
+  let txt,cls;
+  if(g){cls=g.state==='in'?'live':g.state==='post'?'post':'pre';
+    txt=g.state==='pre'?g.away+' vs '+g.home+' · '+horaLocal(g.start):g.away+' '+g.awayScore+' - '+g.homeScore+' '+g.home+' · '+g.detail;}
+  else if(fin){cls='post';txt=fin.score+' · '+(fin.detail||'Final');}
+  else{cls='pre';txt=(p.game&&p.game.name)||p.event;if(!p.game)txt+=' · buscando partido';}
+  let extra='';
+  const calc=(window.LMMercado&&g&&cls==='live')?LMMercado.evalMkt(p.mkt,g):null,lv=calc?{estado:calc.e,nota:calc.n}:p.live;
+  if(lv&&cls==='live')extra+='<span class="lvst '+((LIVE_CLS||{})[lv.estado]||'')+'">'+esc(lv.estado)+'</span>'+(lv.nota&&!compact?'<span class="lvnote">'+esc(lv.nota)+'</span>':'');
+  if(p.resultNote&&!compact)extra+='<span class="rnote">'+(p.autoResult?'Resultado automático: ':'')+esc(p.resultNote)+'</span>';
+  return '<div class="game '+cls+'">'+(cls==='live'?'<b class="livedot">● EN VIVO</b>':'')+'<span>'+esc(txt)+'</span>'+extra+'</div>';
+}
+function photoUrl(id){return '/api/fotos/'+String(id).split('/').map(encodeURIComponent).join('/');}
+async function startApp(name){
+  $('login').hidden=true;$('app').hidden=false;$('whoMail').textContent=name||'';
+  S.uid=name||null;
+  if(db)return;
+  db=LM.makeDb();assets=LM.assets;sample=LM.sample;downloads=LM.downloads;
+  db.collection('notes').onSnapshot(snap=>{const n={};snap.docs.forEach(d=>{const x=d.data();n[x.date||d.id]=x;});S.notes=n;renderCal();renderDay();});
+  subscribeMonth();updSave();setFiles(S.files);
+  triggerUpdate();
+  setInterval(()=>{if(document.visibilityState==='visible'){ensureScores(S.picks);if(S.view==='ana'&&S.lastAna)ensureScores(S.lastAna.list);}},60000);
+}
+function showLogin(){$('app').hidden=true;$('login').hidden=false;setTimeout(()=>{try{$('lEmail').value=localStorage.getItem('lm_nombre')||'';}catch(e){}($('lEmail').value?$('lPass'):$('lEmail')).focus();},50);}
+window.addEventListener('lm-sesion-caducada',()=>{if(!$('login').hidden)return;toast('Tu sesión caducó. Vuelve a entrar.');showLogin();});
+(async()=>{
+  $('loginForm').onsubmit=async e=>{e.preventDefault();$('lBtn').disabled=true;$('lMsg').textContent='Entrando…';
+    const name=$('lEmail').value.trim();
+    try{const r=await fetch('/api/login',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({name,password:$('lPass').value})});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok){$('lMsg').textContent=j.error||'No se pudo entrar.';return;}
+      try{localStorage.setItem('lm_nombre',name);}catch(e){}
+      $('lMsg').textContent='';$('lPass').value='';startApp(j.name);
+    }catch(err){$('lMsg').textContent='Sin conexión. Inténtalo otra vez.';}
+    finally{$('lBtn').disabled=false;}};
+  $('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'});}catch(e){}location.reload();};
+  try{const r=await fetch('/api/me',{credentials:'same-origin',cache:'no-store'});
+    if(r.ok){const j=await r.json();startApp(j.name);}else showLogin();
+  }catch(e){showLogin();$('lMsg').textContent='Sin conexión con el servidor.';}
+})();
+</script>
+</body>
+</html>
