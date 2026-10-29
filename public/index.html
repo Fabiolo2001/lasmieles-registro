@@ -453,13 +453,12 @@ async function saveEdit(id){if(!db)return;const date=$('e-date').value;const [pk
     if(date!==S.sel){S.sel=date;setMonth(date.slice(0,7));}else renderDay();
   }catch(e){$('e-save').disabled=false;toast(writeErr(e));}}
 function pickCard(p){if(S.editing===p.id)return editForm(p);const r=p.result||'pendiente';
-  const photos=(p.photos||[]).map(id=>'<a href="'+esc(photoUrl(id))+'" target="_blank" rel="noopener"><img src="'+esc(photoUrl(id))+'" alt="Foto del pick"></a>').join('');
+  const ph=p.photos||[];const photos=ph.map((id,i)=>'<a class="btn" href="'+esc(photoUrl(id))+'" target="_blank" rel="noopener" style="padding:4px 10px;font-size:12px;text-decoration:none">Ver foto'+(ph.length>1?' '+(i+1):'')+'</a>').join('');
   return '<div class="pick '+esc(r)+'">'+
     '<div class="pk">'+esc(p.pick)+'</div>'+gameLine(p)+
     '<div class="meta"><span style="color:var(--honey);font-weight:600">'+esc(secName(p.package,p.section))+'</span><span>'+esc(p.sport)+'</span><span>'+esc(p.betType)+'</span><span>'+esc(p.units)+' U</span>'+(p.odds!=null&&p.odds!==''?'<span>Cuota '+esc(fmtOdds(p.odds))+'</span>':'')+'</div>'+
     '<div class="seg">'+RES.map(([k,t])=>'<button class="'+k+(k===r?' on':'')+'" data-res="'+k+'" data-id="'+esc(p.id)+'">'+t+'</button>').join('')+'</div>'+
-    (photos?'<div class="thumbs">'+photos+'</div>':'')+
-    '<div class="confirm"><button class="btn" data-ed="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">Editar</button><button class="btn ghost danger" data-del="'+esc(p.id)+'" style="padding:4px 8px;font-size:12px">Borrar pick</button></div></div>';}
+    '<div class="confirm"><button class="btn" data-ed="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">Editar</button><button class="btn ghost danger" data-del="'+esc(p.id)+'" style="padding:4px 8px;font-size:12px">Borrar pick</button>'+photos+'</div></div>';}
 
 async function setResult(id,res){if(!db)return;try{await db.doc('picks/'+id).update({result:res,autoResult:false,resultNote:null});}catch(e){toast(writeErr(e));}}
 async function delPick(id){if(!db)return;try{await db.doc('picks/'+id).delete();toast('Pick borrado');}catch(e){toast(writeErr(e));}}
