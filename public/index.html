@@ -354,7 +354,7 @@ let db=null,assets=null,sample=null,user=null,downloads=null,unsubMonth=null;
 
 /* ---------- Pestañas ---------- */
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
-function setView(v){S.view=v;
+function setView(v){S.view=v;S.editing=null;
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
   ['cal','dia','ana','add'].forEach(k=>$('v-'+k).hidden=k!==v);
   $('monthbar').hidden=v==='add'||v==='dia';
@@ -401,7 +401,8 @@ function renderCal(){
 }
 function fmtLong(ds){const d=new Date(ds+'T12:00:00');return DIAS[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()]+' '+d.getFullYear();}
 
-function renderDay(){
+function renderDay(force){
+  if(!force&&S.editing&&document.querySelector('[data-edit]'))return; // no pisar lo que se está escribiendo
   const host=S.view==='dia'?$('diaPanel'):$('dayPanel'),other=S.view==='dia'?$('dayPanel'):$('diaPanel');if(other)other.innerHTML='';
   const ds=S.sel;const list=S.picks.filter(p=>p.date===ds).sort((a,b)=>String(b.createdAt||'').slice(0,19).localeCompare(String(a.createdAt||'').slice(0,19))||((a.ord??0)-(b.ord??0)));const note=S.notes[ds];
   const st=stats(list);
@@ -424,7 +425,7 @@ function renderDay(){
   host.innerHTML=h;
   $('noteSave').onclick=saveNote;if($('noteDel'))$('noteDel').onclick=delNote;
   if($('goAdd'))$('goAdd').onclick=()=>{$('aDate').value=ds;setView('add');};
-  host.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{S.editing=b.dataset.ed;renderDay();const f=$('e-pick');if(f)f.focus();});
+  host.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{S.editing=b.dataset.ed;renderDay(true);const f=$('e-pick');if(f)f.focus();});
   if($('e-save')){const id=$('e-save').closest('[data-edit]').dataset.edit;$('e-save').onclick=()=>saveEdit(id);
     $('e-cancel').onclick=()=>{S.editing=null;renderDay();};
     $('e-pkg').onchange=e=>{const x=PKSEC.find(z=>z[0]===e.target.value);if(x)$('e-units').value=x[2];};}
@@ -657,7 +658,7 @@ async function readPhotos(){
    '- Cuota: no confundas la cuota con la línea del pick (en "Over 2.5 -115" la línea es 2.5 y la cuota -115; en "Warriors -4.5 (-110)" el spread es -4.5 y la cuota -110). Quita la cuota del texto de "pick".\n'+
    'Reglas:\n'+
    '- Lee la imagen de arriba abajo y devuelve TODOS los picks, uno por objeto, en el mismo orden. Cada línea o bloque con su propio partido o jugada es un pick distinto, aunque sea del mismo partido o del mismo tipo. Cuenta los picks antes de responder y no te saltes ninguno.\n'+
-   '- Over/Under: cualquier jugada con Over, Under, O, U, Más de, Menos de, Alta o Baja seguida de una línea (2.5, 9.5, 210.5…) es betType "Over/Under", sea de goles, córners, tarjetas, puntos, carreras o de un jugador (si es de un jugador concreto usa "Player prop"). Copia la línea exacta en "pick", p. ej. "Over 2.5 goles" o "Under 9.5 córners".\n'+
+   '- Over/Under: cualquier jugada con Over, Under, O, U, Más de, Menos de, Alta o Baja seguida de una línea (2.5, 9.5, 210.5…) es betType "Over/Under", sea de goles, córners, tarjetas, puntos, carreras o de un jugador (si es de un jugador concreto usa "Player prop"). Copia la jugada entera tal como aparece, con los equipos si los nombra y sin traducir nada: "Torino-Como Over 2.5 Goals" se queda "Torino-Como Over 2.5 Goals" (nunca "Over 2.5 goles"); "Real Madrid vs Getafe Under 9.5 córners" se queda igual.\n'+
    '- Estrella: si un pick tiene una estrella, pon "star": true. Candado o Lock: si tiene un candado, o si en el texto junto al pick pone "& Lock" o "Lock", pon "lock": true y deja en "pick" solo la jugada. Solo esos picks son de La Asegurada. Copa o VIP: si tiene una copa o trofeo 🏆, o si en el texto junto al pick pone "& VIP", pon "trophy": true y deja en "pick" solo la jugada (es la Jugada VIP de Soccer). Joya o Instagram: si tiene una joya o diamante 💎, o si junto al pick pone "Instagram" (por ejemplo "Over 2.5 & Instagram"), pon "gem": true y deja en "pick" solo la jugada, sin la palabra Instagram. En la misma foto pueden venir picks con icono y picks extras sin icono: devuélvelos todos. Mira el icono de cada pick por separado.\n'+
    '- Player props: cualquier jugada sobre un jugador concreto (goles, tiros, asistencias, puntos, rebotes, strikeouts… de un jugador) es betType "Player prop", también en fútbol. Pon bien "sport" en cada pick.\n'+
    '- Unidades: si junto a un pick pone cuántas unidades lleva (en la foto suele poner "3 units"; en el texto suele poner "&3" pegado al pick; también 3U, 3 unidades, Stake 3…), pon ese número en "units" y quita esa marca de "pick". Si no lo pone, "units": null.\n'+
@@ -665,7 +666,7 @@ async function readPhotos(){
    '- Tipos: ML, Moneyline o ganador del partido = "Moneyline". Spread, hándicap o línea con +/- a un equipo (Blackhawks +1.5, Warriors -4.5) = "Spread". Ambos marcan o BTTS = "BTTS". Empate no apuesta, DNB o Draw No Bet = "Winner push if tied".\n'+
    '- No inventes picks. Si una combinada tiene varias selecciones, haz un solo objeto con betType "Combinada" y todas las selecciones en "pick". Ignora cuotas. Si no hay picks, devuelve [].\n'+
    '- Deporte: en la imagen o el texto, arriba de cada grupo de picks hay una etiqueta con el deporte (MLB, NHL, SOCCER, NBA, UFC, NCAAF, NCAAB, NFL). Usa esa etiqueta como "sport" para todos los picks que vengan debajo, hasta la siguiente etiqueta. Fútbol es SOCCER; NCAAF es fútbol americano universitario y NCAAB baloncesto universitario. Si no hay etiqueta, dedúcelo por los equipos.\n'+
-   'Ejemplo: [{"sport":"SOCCER","pick":"BTTS","betType":"BTTS","star":false,"units":5},{"sport":"SOCCER","pick":"Under 2.5 goles","betType":"Over/Under","star":true,"units":null}]'+(txt?'\n\nTEXTO DE LOS PICKS:\n'+txt.slice(0,20000):'');
+   'Ejemplo: [{"sport":"SOCCER","event":"Roma vs Parma","pick":"Roma-Parma BTTS","betType":"BTTS","star":false,"units":5},{"sport":"SOCCER","event":"Torino vs Como","pick":"Torino-Como Over 2.5 Goals","betType":"Over/Under","trophy":true,"units":null}]'+(txt?'\n\nTEXTO DE LOS PICKS:\n'+txt.slice(0,20000):'');
   try{
     const out=await sample.json(prompt,files.length?{images:files}:{});
     const arr=Array.isArray(out)?out:[];
