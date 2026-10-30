@@ -181,6 +181,10 @@ tr.tot td{font-weight:600}
 .diapanel{max-width:760px;margin:0 auto 40px;position:static;touch-action:pan-y}
 @media (prefers-reduced-motion:no-preference){.slide-l{animation:lmsl .22s ease-out}.slide-r{animation:lmsr .22s ease-out}}
 @keyframes lmsl{from{transform:translateX(28px);opacity:.4}to{transform:none;opacity:1}}@keyframes lmsr{from{transform:translateX(-28px);opacity:.4}to{transform:none;opacity:1}}
+.pkchips{display:flex;flex-wrap:wrap;gap:6px}
+.pkchip{font:600 13px var(--body);border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:6px 12px;cursor:pointer}
+.pkchip b{font-weight:700;color:var(--muted);margin-left:2px}
+.pkchip.on{background:var(--honey-soft);border-color:var(--honey)}.pkchip.on b{color:var(--honey)}
 .legsbox{display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line);padding-left:8px;margin:2px 0}
 .leg{display:grid;grid-template-columns:16px minmax(0,1fr);gap:0 6px;font-size:12.5px;align-items:baseline}
 .leg .legi{color:var(--muted);text-align:center}.leg.ganado .legi{color:var(--win)}.leg.perdido .legi{color:var(--loss)}
@@ -259,7 +263,7 @@ tr.tot td{font-weight:600}
   <section id="v-ana" hidden>
     <div class="filters">
       <label><span class="lbl">Periodo</span>
-        <select id="fScope"><option value="month">Mes seleccionado</option><option value="d7">Últimos 7 días</option><option value="d10">Últimos 10 días</option><option value="d30">Últimos 30 días</option><option value="custom">Últimos… (elige los días)</option><option value="all">Todo el histórico</option></select></label>
+        <select id="fScope"><option value="month">Mes seleccionado</option><option value="wk">Esta semana (desde el lunes)</option><option value="lwk">Semana pasada</option><option value="d2">Últimos 2 días</option><option value="d7">Últimos 7 días</option><option value="d10">Últimos 10 días</option><option value="d30">Últimos 30 días</option><option value="custom">Últimos… (elige los días)</option><option value="all">Todo el histórico</option></select></label>
       <label id="fDaysWrap" hidden style="min-width:110px;max-width:140px"><span class="lbl">Nº de días</span><input type="number" id="fDays" min="1" step="1" value="15"></label>
       <label><span class="lbl">Paquete</span><select id="fPkg"></select></label>
       <label><span class="lbl">Deporte</span><select id="fSport"></select></label>
@@ -399,14 +403,24 @@ function renderCal(){
   $('days').querySelectorAll('.day[data-d]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.d;renderCal();renderDay();
     $('dayPanel').scrollIntoView({behavior:'smooth',block:'start'});});
 }
+function addDays(ds,n){const d=new Date(ds+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function mondayOf(ds){const d=new Date(ds+'T12:00:00Z');return addDays(ds,-((d.getUTCDay()+6)%7));}
+function fmtShort(ds){const d=new Date(ds+'T12:00:00Z');return DIAS[d.getUTCDay()].slice(0,3)+' '+d.getUTCDate()+' '+MES[d.getUTCMonth()].slice(0,3);}
 function fmtLong(ds){const d=new Date(ds+'T12:00:00');return DIAS[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()]+' '+d.getFullYear();}
 
 function renderDay(force){
   if(!force&&S.editing&&document.querySelector('[data-edit]'))return; // no pisar lo que se está escribiendo
   const host=S.view==='dia'?$('diaPanel'):$('dayPanel'),other=S.view==='dia'?$('dayPanel'):$('diaPanel');if(other)other.innerHTML='';
-  const ds=S.sel;const list=S.picks.filter(p=>p.date===ds).sort((a,b)=>String(b.createdAt||'').slice(0,19).localeCompare(String(a.createdAt||'').slice(0,19))||((a.ord??0)-(b.ord??0)));const note=S.notes[ds];
+  const ds=S.sel;const all=S.picks.filter(p=>p.date===ds).sort((a,b)=>String(b.createdAt||'').slice(0,19).localeCompare(String(a.createdAt||'').slice(0,19))||((a.ord??0)-(b.ord??0)));const note=S.notes[ds];
+  S.dayPkg=S.dayPkg||new Set();
+  const pres=[];all.forEach(x=>{const P=pkgOf(x.package);const k=P?P.id:'otros';if(!pres.find(z=>z.k===k))pres.push({k,n:P?P.name:'Otros',o:P?PKGS.indexOf(P):99});});pres.sort((x,y)=>x.o-y.o);
+  const keyOf=x=>pkgOf(x.package)?x.package:'otros';
+  const act=[...S.dayPkg].filter(k=>pres.some(z=>z.k===k));
+  const list=act.length?all.filter(x=>act.includes(keyOf(x))):all;
   const st=stats(list);
   let h='<div><div class="lbl">Día seleccionado</div><h2>'+fmtLong(ds)+'</h2></div>';
+  if(pres.length>1)h+='<div class="pkchips" role="group" aria-label="Filtrar por paquete"><button class="pkchip'+(act.length?'':' on')+'" data-pk="">Todos <b>'+all.length+'</b></button>'+
+    pres.map(z=>'<button class="pkchip'+(act.includes(z.k)?' on':'')+'" data-pk="'+esc(z.k)+'" aria-pressed="'+act.includes(z.k)+'">'+esc(z.n)+' <b>'+all.filter(x=>keyOf(x)===z.k).length+'</b></button>').join('')+'</div>';
   h+='<div class="notebox"><span class="lbl">Nota del día '+(note?'· marcado como importante':'')+'</span>'+
      '<textarea id="noteTxt" placeholder="Ej.: Final de España, pick especial para la comunidad…">'+esc(note?note.text:'')+'</textarea>'+
      '<div class="row"><button class="btn honey" id="noteSave">'+(note?'Guardar nota':'Marcar día importante')+'</button>'+
@@ -423,6 +437,7 @@ function renderDay(force){
     if(other.length){h+='<div class="pkgblock"><h3>Otros</h3>'+other.map(pickCard).join('')+'</div>';}
   }
   host.innerHTML=h;
+  host.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{const k=b.dataset.pk;if(!k)S.dayPkg.clear();else if(S.dayPkg.has(k))S.dayPkg.delete(k);else S.dayPkg.add(k);renderDay(true);});
   $('noteSave').onclick=saveNote;if($('noteDel'))$('noteDel').onclick=delNote;
   if($('goAdd'))$('goAdd').onclick=()=>{$('aDate').value=ds;setView('add');};
   host.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{S.editing=b.dataset.ed;renderDay(true);const f=$('e-pick');if(f)f.focus();});
@@ -563,12 +578,18 @@ function groupTable(title,list,keyFn,order){
   if(!keys.length)return '';
   return '<div class="tbl"><h3>'+title+'</h3><div class="tscroll"><table>'+THEAD+'<tbody>'+keys.map(k=>rowHtml(k,stats(g[k]))).join('')+'</tbody></table></div></div>';}
 function renderAna(){
-  const nDays=S.scope==='custom'?Math.max(1,parseInt($('fDays').value,10)||1):S.scope.startsWith('d')?parseInt(S.scope.slice(1),10):0;
+  const nDays=S.scope==='custom'?Math.max(1,parseInt($('fDays').value,10)||1):/^d\d+$/.test(S.scope)?parseInt(S.scope.slice(1),10):0;
   let base=S.scope==='month'?S.picks:(S.all||[]);
-  if(nDays){const from=new Date();from.setDate(from.getDate()-(nDays-1));const f=ymd(from);base=base.filter(x=>x.date>=f&&x.date<=today);}
+  let range=null;
+  if(nDays){ // días de Miami; si hoy aún no hay picks, se cuentan desde ayer (p. ej. lunes por la mañana = sábado y domingo)
+    const end=base.some(x=>x.date===today)?today:addDays(today,-1);range=[addDays(end,-(nDays-1)),end];}
+  else if(S.scope==='wk'){const mon=mondayOf(today);range=[mon,today];}
+  else if(S.scope==='lwk'){const mon=addDays(mondayOf(today),-7);range=[mon,addDays(mon,6)];}
+  if(range)base=base.filter(x=>x.date>=range[0]&&x.date<=range[1]);
   const list=base.filter(x=>!(S.noProps&&x.package==='props'&&S.fPkg!=='props')&&(!S.fPkg||(S.fPkg.includes(':')?x.package+':'+x.section===S.fPkg:x.package===S.fPkg))&&(!S.fSport||x.sport===S.fSport)&&(!S.fType||x.betType===S.fType));
   const st=stats(list);
-  const period=S.scope==='all'?'todo el histórico':nDays?'los últimos '+nDays+(nDays===1?' día':' días'):$('mTitle').textContent;
+  const rTxt=range?' ('+fmtShort(range[0])+(range[0]!==range[1]?' – '+fmtShort(range[1]):'')+')':'';
+  const period=S.scope==='all'?'todo el histórico':nDays?'los últimos '+nDays+(nDays===1?' día':' días')+rTxt:S.scope==='wk'?'esta semana'+rTxt:S.scope==='lwk'?'la semana pasada'+rTxt:$('mTitle').textContent;
   S.lastAna={list,st,period};ensureScores(list);
   $('score').innerHTML=
     '<div class="tile"><div class="v">'+st.n+'</div><div class="s">Picks en '+esc(period)+'</div></div>'+
