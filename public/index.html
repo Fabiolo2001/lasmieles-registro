@@ -352,7 +352,7 @@ function toast(t,action,ms){const el=$('toast');el.textContent=t;
   el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,ms||(action?12000:2600));}
 
 const today=(()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date());}catch(e){return ymd(new Date());}})(); // fecha de Miami
-const S={scores:{},scoreAt:{},editing:null,view:'cal',month:today.slice(0,7),sel:today,picks:[],notes:{},all:null,uid:null,
+const S={openNotes:new Set(),scores:{},scoreAt:{},editing:null,view:'cal',month:today.slice(0,7),sel:today,picks:[],notes:{},all:null,uid:null,
   scope:'month',fPkg:'',fSport:'',fType:'',rows:[],files:[]};
 let db=null,assets=null,sample=null,user=null,downloads=null,unsubMonth=null;
 
@@ -444,6 +444,8 @@ function renderDay(force){
   if($('e-save')){const id=$('e-save').closest('[data-edit]').dataset.edit;$('e-save').onclick=()=>saveEdit(id);
     $('e-cancel').onclick=()=>{S.editing=null;renderDay();};
     $('e-pkg').onchange=e=>{const x=PKSEC.find(z=>z[0]===e.target.value);if(x)$('e-units').value=x[2];};}
+  host.querySelectorAll('[data-exp]').forEach(b=>b.onclick=()=>{const id=b.dataset.exp;const open=!S.openNotes.has(id);if(open)S.openNotes.add(id);else S.openNotes.delete(id);
+    host.querySelectorAll('[data-note="'+CSS.escape(id)+'"]').forEach(n=>n.hidden=!open);b.textContent=open?'Ocultar explicación':'Ver explicación';});
   host.querySelectorAll('[data-res]').forEach(b=>b.onclick=()=>setResult(b.dataset.id,b.dataset.res));
   host.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
     const box=b.parentElement;box.innerHTML='<span>¿Borrar este pick?</span><button class="btn danger" data-yes="'+b.dataset.del+'">Borrar</button><button class="btn ghost" data-no>Cancelar</button>';
@@ -473,7 +475,8 @@ function pickCard(p){if(S.editing===p.id)return editForm(p);const r=p.result||'p
     '<div class="pk">'+esc(p.pick)+'</div>'+gameLine(p)+
     '<div class="meta"><span style="color:var(--honey);font-weight:600">'+esc(secName(p.package,p.section))+'</span><span>'+esc(p.sport)+'</span><span>'+esc(p.betType)+'</span><span>'+esc(p.units)+' U</span>'+(p.odds!=null&&p.odds!==''?'<span>Cuota '+esc(fmtOdds(p.odds))+'</span>':'')+'</div>'+
     '<div class="seg">'+RES.map(([k,t])=>'<button class="'+k+(k===r?' on':'')+'" data-res="'+k+'" data-id="'+esc(p.id)+'">'+t+'</button>').join('')+'</div>'+
-    '<div class="confirm"><button class="btn" data-ed="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">Editar</button><button class="btn ghost danger" data-del="'+esc(p.id)+'" style="padding:4px 8px;font-size:12px">Borrar pick</button>'+photos+'</div></div>';}
+    '<div class="confirm"><button class="btn" data-ed="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">Editar</button><button class="btn ghost danger" data-del="'+esc(p.id)+'" style="padding:4px 8px;font-size:12px">Borrar pick</button>'+photos+
+    (p.resultNote?'<button class="btn" data-exp="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">'+(S.openNotes.has(p.id)?'Ocultar explicación':'Ver explicación')+'</button>':'')+'</div></div>';}
 
 async function setResult(id,res){if(!db)return;try{await db.doc('picks/'+id).update({result:res,autoResult:false,resultNote:null});}catch(e){toast(writeErr(e));}}
 async function delPick(id){if(!db)return;try{await db.doc('picks/'+id).delete();toast('Pick borrado');}catch(e){toast(writeErr(e));}}
@@ -846,7 +849,7 @@ function gameLine(p,compact){
     let h='<div class="game parlay'+(anyLive?' live':'')+'">'+(anyLive?'<b class="livedot">● EN VIVO</b>':'')+'<span class="muted">Combinada · '+p.legs.length+' selecciones'+(won?' · '+won+' acertadas':'')+'</span>';
     if(liveSt&&anyLive)h+='<span class="lvst '+((LIVE_CLS||{})[liveSt.estado]||'')+'">'+esc(liveSt.estado)+'</span>';
     h+='</div><div class="legsbox">'+p.legs.map(l=>legLine(l,compact)).join('')+'</div>';
-    if(p.resultNote&&!compact)h+='<div class="game"><span class="rnote">'+(p.autoResult?'Resultado automático: ':'')+esc(p.resultNote)+'</span></div>';
+    if(p.resultNote&&!compact)h+='<div class="game"'+noteHidden(p)+'><span class="rnote">'+(p.autoResult?'Resultado automático: ':'')+esc(p.resultNote)+'</span></div>';
     return h;
   }
   const g=gameNow(p),fin=p.final;
@@ -859,9 +862,12 @@ function gameLine(p,compact){
   let extra='';
   const calc=(window.LMMercado&&g&&cls==='live')?LMMercado.evalMkt(p.mkt,g):null,lv=calc?{estado:calc.e,nota:calc.n}:p.live;
   if(lv&&cls==='live')extra+='<span class="lvst '+((LIVE_CLS||{})[lv.estado]||'')+'">'+esc(lv.estado)+'</span>'+(lv.nota&&!compact?'<span class="lvnote">'+esc(lv.nota)+'</span>':'');
-  if(p.resultNote&&!compact)extra+='<span class="rnote">'+(p.autoResult?'Resultado automático: ':'')+esc(p.resultNote)+'</span>';
+  if(p.resultNote&&!compact)extra+='<span class="rnote"'+noteHidden(p)+'>'+(p.autoResult?'Resultado automático: ':'')+esc(p.resultNote)+'</span>';
   return '<div class="game '+cls+'">'+(cls==='live'?'<b class="livedot">● EN VIVO</b>':'')+'<span>'+esc(txt)+'</span>'+extra+'</div>';
 }
+/* Explicación del resultado: oculta salvo que se pida (en las fichas; en la tabla de Análisis no sale) */
+
+function noteHidden(p){return ' data-note="'+esc(p.id)+'"'+(S.openNotes.has(p.id)?'':' hidden');}
 function photoUrl(id){return '/api/fotos/'+String(id).split('/').map(encodeURIComponent).join('/');}
 async function startApp(name){
   $('login').hidden=true;$('app').hidden=false;$('whoMail').textContent=name||'';
