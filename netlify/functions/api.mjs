@@ -11,6 +11,7 @@
 import crypto from "node:crypto";
 import { COOKIE, sign, verify, sameText } from "../lib/sesion.mjs";
 import { scoreboard, LEAGUES } from "../lib/deportes.mjs";
+import { notify } from "../lib/telegram.mjs";
 import { getDatabase } from "@netlify/database";
 import { getStore } from "@netlify/blobs";
 import Anthropic from "@anthropic-ai/sdk";
@@ -147,6 +148,13 @@ export default async (req, context) => {
       const lg = url.searchParams.get("l") || "", d = url.searchParams.get("d") || "";
       if (!LEAGUES[lg] || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return json({ error: "Parámetros no válidos" }, 400);
       return json(await scoreboard(lg, d), 200, { "cache-control": "public, max-age=20" });
+    }
+    // Mensaje de prueba de los avisos de Telegram (protegido con RESUMEN_KEY)
+    if (route === "aviso-prueba" && m === "GET") {
+      const key = Netlify.env.get("RESUMEN_KEY");
+      if (!key || !sameText(url.searchParams.get("k") || "", key)) return json({ error: "Clave no válida" }, 401);
+      const ok = await notify("✅ <b>Prueba</b>\nLos avisos del Registro Las Mieles están activos. Te escribiré aquí cada vez que se marque un pick.");
+      return json({ enviado: ok, token: !!Netlify.env.get("TELEGRAM_BOT_TOKEN"), chat: !!Netlify.env.get("TELEGRAM_CHAT_ID") });
     }
     // Resumen del día para la tarea del mensaje de buenos días (protegido con clave RESUMEN_KEY)
     if (route === "resumen" && m === "GET") {
