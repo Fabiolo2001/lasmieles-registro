@@ -11,7 +11,7 @@
 import crypto from "node:crypto";
 import { COOKIE, sign, verify, sameText } from "../lib/sesion.mjs";
 import { scoreboard, LEAGUES } from "../lib/deportes.mjs";
-import { notify } from "../lib/telegram.mjs";
+import { notify, esc as tesc } from "../lib/telegram.mjs";
 import { getDatabase } from "@netlify/database";
 import { getStore } from "@netlify/blobs";
 import Anthropic from "@anthropic-ai/sdk";
@@ -123,6 +123,23 @@ async function leer(req) {
   return new Response(out, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
 }
 
+
+/* ---------- Aviso de cambios a mano ---------- */
+const PKN = { soccer: "Soccer", exclusiva: "Exclusiva", asegurada: "Asegurada", props: "Player Props", free: "Free Pick", instagram: "Instagram" };
+const SECN = { vip: "Jugada VIP", pick5: "Picks extras", extra5: "Picks extras" };
+const ICON = { ganado: "✅", perdido: "❌", nulo: "➖", pendiente: "↩️" };
+async function avisoManual(p, prev, who) {
+  const res = p.result || "pendiente";
+  const day = await db().sql`SELECT data->>'result' AS r, (data->>'units')::float AS u FROM picks WHERE date = ${p.date}`;
+  const t = { g: 0, l: 0, n: 0, pend: 0, ug: 0, ul: 0 };
+  for (const x of day) { const u = x.u || 0; if (x.r === "ganado") { t.g++; t.ug += u; } else if (x.r === "perdido") { t.l++; t.ul += u; } else if (x.r === "nulo") t.n++; else t.pend++; }
+  const net = t.ug - t.ul;
+  const head = res === "pendiente" ? `${ICON.pendiente} <b>VUELTO A PENDIENTE</b> (antes ${tesc(prev)})` : `${ICON[res]} <b>${tesc(res.toUpperCase())}</b>${prev !== "pendiente" ? ` (antes ${tesc(prev)})` : ""}`;
+  const txt = `${head} · ${tesc(SECN[p.section] || PKN[p.package] || p.package)} · ${tesc(p.units)} U\n${tesc(p.pick)}\n` +
+    (p.final && p.final.score ? `${tesc(p.final.score)}${p.final.detail ? " · " + tesc(p.final.detail) : ""}\n` : "") +
+    `<i>Cambiado a mano por ${tesc(who || "alguien del equipo")}</i>\n\nDía ${tesc(p.date)}: ${t.g}-${t.l}-${t.n} · ${net >= 0 ? "+" : ""}${net} U${t.pend ? ` · ${t.pend} pendiente${t.pend === 1 ? "" : "s"}` : ""}`;
+  await notify(txt);
+}
 /* ---------- Router ---------- */
 export default async (req, context) => {
   const url = new URL(req.url);
@@ -195,7 +212,16 @@ export default async (req, context) => {
         if (!data || typeof data !== "object" || Array.isArray(data)) return json({ error: "Datos no válidos" }, 400);
         if (JSON.stringify(data).length > 200000) return json({ error: "Demasiado grande" }, 413);
         if (m === "PUT") { await setDoc(table, id, data); return json({ ok: true }); }
+        // Cambio de resultado a mano: aviso por Telegram
+        let before = null;
+        if (table === "picks" && typeof data.result === "string") {
+          const r = await db().sql`SELECT data FROM picks WHERE id = ${id}`;
+          before = r[0] ? r[0].data : null;
+        }
         const found = await patchDoc(table, id, data);
+        if (found && before && (before.result || "pendiente") !== data.result) {
+          try { await avisoManual({ ...before, ...data }, before.result || "pendiente", ses.n); } catch (e) { console.warn("aviso manual", e.message); }
+        }
         return found ? json({ ok: true }) : json({ error: "No existe" }, 404);
       }
       if (m === "DELETE") { await deleteDoc(table, id); return json({ ok: true }); }
