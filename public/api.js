@@ -35,8 +35,20 @@
       timers[table] = setTimeout(() => subs.forEach(s => { if (s.table === table) run(s); }), 120);
     }
     // Ver los cambios del resto del equipo
-    setInterval(() => { if (document.visibilityState === 'visible') { refresh('picks'); refresh('notes'); } }, 15000);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { refresh('picks'); refresh('notes'); } });
+    // Ver los cambios del resto del equipo: se pregunta por una marca ligera y solo se recarga si cambió algo
+    let lastCambio = null;
+    async function checkCambios() {
+      try {
+        const r = await fetch('/api/cambios', { credentials: 'same-origin', cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (lastCambio !== null && j.cambio !== lastCambio) { refresh('picks'); refresh('notes'); }
+        lastCambio = j.cambio;
+      } catch (e) {}
+    }
+    checkCambios();
+    setInterval(() => { if (document.visibilityState === 'visible') checkCambios(); }, 20000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkCambios(); });
 
     function docRef(table, id) {
       const p = 'docs/' + table + '/' + encodeURIComponent(id);

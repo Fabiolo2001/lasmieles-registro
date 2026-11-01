@@ -876,7 +876,7 @@ async function startApp(name){
   db=LM.makeDb();assets=LM.assets;sample=LM.sample;downloads=LM.downloads;
   db.collection('notes').onSnapshot(snap=>{const n={};snap.docs.forEach(d=>{const x=d.data();n[x.date||d.id]=x;});S.notes=n;renderCal();renderDay();});
   subscribeMonth();updSave();setFiles(S.files);
-  triggerUpdate();
+  // La revisión de resultados la hace la tarea programada; al abrir la página ya no se lanza (ahorra base de datos y Claude)
   setInterval(()=>{if(document.visibilityState==='visible'){ensureScores(S.picks);if(S.view==='ana'&&S.lastAna)ensureScores(S.lastAna.list);}},60000);
 }
 function showLogin(){$('app').hidden=true;$('login').hidden=false;setTimeout(()=>{try{$('lEmail').value=localStorage.getItem('lm_nombre')||'';}catch(e){}($('lEmail').value?$('lPass'):$('lEmail')).focus();},50);}

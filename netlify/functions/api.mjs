@@ -12,6 +12,7 @@ import crypto from "node:crypto";
 import { COOKIE, sign, verify, sameText } from "../lib/sesion.mjs";
 import { scoreboard, LEAGUES } from "../lib/deportes.mjs";
 import { notify, esc as tesc } from "../lib/telegram.mjs";
+import { leerEstado, guardarEstado } from "../lib/estado.mjs";
 import { getDatabase } from "@netlify/database";
 import { getStore } from "@netlify/blobs";
 import Anthropic from "@anthropic-ai/sdk";
@@ -196,6 +197,8 @@ export default async (req, context) => {
     if (!ses) return json({ error: "Inicia sesión" }, 401);
 
     if (route === "me") return json({ name: ses.n });
+    // La página pregunta aquí (sin tocar la base de datos) si hubo cambios
+    if (route === "cambios") { const e = await leerEstado(); return json({ cambio: e.cambio || 0 }); }
 
     if (route === "docs") {
       const table = parts[1], id = parts[2];
@@ -211,7 +214,7 @@ export default async (req, context) => {
         try { data = await req.json(); } catch { return json({ error: "Datos no válidos" }, 400); }
         if (!data || typeof data !== "object" || Array.isArray(data)) return json({ error: "Datos no válidos" }, 400);
         if (JSON.stringify(data).length > 200000) return json({ error: "Demasiado grande" }, 413);
-        if (m === "PUT") { await setDoc(table, id, data); return json({ ok: true }); }
+        if (m === "PUT") { await setDoc(table, id, data); await guardarEstado(table === "picks" ? { cambio: Date.now(), nextAt: 0 } : { cambio: Date.now() }); return json({ ok: true }); }
         // Cambio de resultado a mano: aviso por Telegram
         let before = null;
         if (table === "picks" && typeof data.result === "string") {
@@ -219,12 +222,13 @@ export default async (req, context) => {
           before = r[0] ? r[0].data : null;
         }
         const found = await patchDoc(table, id, data);
+        if (found) await guardarEstado(table === "picks" ? { cambio: Date.now(), nextAt: 0 } : { cambio: Date.now() });
         if (found && before && (before.result || "pendiente") !== data.result) {
           try { await avisoManual({ ...before, ...data }, before.result || "pendiente", ses.n); } catch (e) { console.warn("aviso manual", e.message); }
         }
         return found ? json({ ok: true }) : json({ error: "No existe" }, 404);
       }
-      if (m === "DELETE") { await deleteDoc(table, id); return json({ ok: true }); }
+      if (m === "DELETE") { await deleteDoc(table, id); await guardarEstado({ cambio: Date.now() }); return json({ ok: true }); }
       return json({ error: "Método no permitido" }, 405);
     }
 

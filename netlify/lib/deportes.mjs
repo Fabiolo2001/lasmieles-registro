@@ -2,6 +2,7 @@
 import { getDatabase } from "@netlify/database";
 import Anthropic from "@anthropic-ai/sdk";
 import { notify, esc } from "./telegram.mjs";
+import { guardarEstado } from "./estado.mjs";
 import "../../public/mercado.js";
 const { evalMkt, comboStatus } = globalThis.LMMercado;
 
@@ -200,7 +201,11 @@ export async function runUpdate({ ids = null, days = 7, log = console.log } = {}
     ? await sql`SELECT id, data FROM picks WHERE id = ANY(${ids})`
     : await sql`SELECT id, data FROM picks WHERE date >= ${from} AND COALESCE(data->>'result','pendiente') = 'pendiente'`;
   const picks = rows.map((r) => ({ id: r.id, ...r.data })).filter((p) => (p.result || "pendiente") === "pendiente" && SPORT_LEAGUES[p.sport]);
-  if (!picks.length) return { picks: 0 };
+  const full = !(ids && ids.length);
+  if (!picks.length) { if (full) await guardarEstado({ nextAt: null, at: Date.now() }); return { picks: 0 }; }
+  // Cuándo hará falta la próxima revisión (para que la tarea programada no despierte la base de datos sin motivo)
+  let nextAt = Infinity;
+  const soon = (t) => { if (t < nextAt) nextAt = t; };
   const patches = new Map();
   const patch = (id, obj) => patches.set(id, { ...(patches.get(id) || {}), ...obj });
 
@@ -303,11 +308,19 @@ SELECCIONES: ${JSON.stringify(items)}`;
   const finished = [], live = [];
   const getGame = async (ref) => ref ? (await scoreboard(ref.league, ref.ymd)).find((x) => x.id === ref.id) || null : null;
   for (const p of picks) {
-    if (!isMatched(p)) continue;
+    if (!isMatched(p)) {
+      const pt = patches.get(p.id) || {};
+      const tries = pt.matchTries ?? p.matchTries ?? 0;
+      if (tries < 6) soon(Date.now());
+      else if (p.date >= recent) soon(Date.parse(pt.matchAt || p.matchAt || 0) + 15 * 60e3);
+      continue;
+    }
     const refs = isCombo(p) ? p.legs.map((l) => l.game) : [p.game];
     const gs = [];
     for (const r of refs) gs.push(await getGame(r));
-    if (gs.some((g) => !g)) continue;
+    if (gs.some((g) => !g)) { soon(Date.now() + 30 * 60e3); continue; }
+    // Ningún partido ha empezado: no hay nada que hacer hasta poco antes del primero
+    if (gs.every((g) => g.state === "pre")) { soon(Math.min(...gs.map((g) => Date.parse(g.start) || Date.now())) - 5 * 60e3); continue; }
     const done = gs.map((g) => g.state === "post" || g.completed);
     const anyLive = gs.some((g) => g.state === "in");
     // Cálculo directo con el marcador cuando el mercado es simple
@@ -322,12 +335,17 @@ SELECCIONES: ${JSON.stringify(items)}`;
       if (res) Object.assign(obj, { result: res, autoResult: true, gradedAt: nowIso(), live: null,
         resultNote: (calc.n || (res === "ganado" ? "Cumplido" : res === "perdido" ? "No cumplido" : "Nulo")) + (done.every(Boolean) ? "" : " (marcado antes del final)") });
       patch(p.id, obj);
+      if (!res) soon(Date.now());
       continue;
     }
-    if (done.every(Boolean)) finished.push({ p, gs });
-    else if (anyLive || done.some(Boolean)) {
+    if (done.every(Boolean)) {
+      // Si Claude no pudo calificarlo 4 veces, se deja para marcarlo a mano
+      if ((p.gradeTries || 0) < 4) { finished.push({ p, gs }); soon(Date.now()); }
+    } else if (anyLive || done.some(Boolean)) {
+      soon(Date.now());
+      // Seguimiento en vivo con Claude (props y mercados especiales): cada 30 minutos, con el modelo rápido
       const last = p.liveAt ? Date.parse(p.liveAt) : 0;
-      if (Date.now() - last > 8 * 60e3) live.push({ p, gs });
+      if (Date.now() - last > 30 * 60e3) live.push({ p, gs });
     }
   }
 
@@ -391,7 +409,7 @@ En las combinadas da también el estado de cada selección en "piernas" (si su p
 Responde un array JSON: [{"id":"...","estado":"...","nota":"...","piernas":[{"texto":"...","estado":"..."}]}]
 PICKS: ${JSON.stringify(items)}`;
     let res = null;
-    try { res = parseJSON(await askClaude(prompt, { maxTokens: 3000 })); } catch (e) { log("live error " + e.message); }
+    try { res = parseJSON(await askClaude(prompt, { quick: true, maxTokens: 3000 })); } catch (e) { log("live error " + e.message); }
     for (const { p, gs } of sel) {
       const m = Array.isArray(res) && res.find((x) => x && x.id === p.id);
       if (!m) continue;
@@ -400,7 +418,8 @@ PICKS: ${JSON.stringify(items)}`;
         final: gs[j].state === "post" ? { score: scoreTxt(gs[j]), detail: gs[j].detail } : l.final || null }));
       // Si ya no puede cambiar, se marca el resultado sin esperar al final del partido
       const est = obj.live.estado.toLowerCase();
-      const early = est === "ya ganado" ? "ganado" : est === "ya perdido" ? "perdido" : null;
+      // Con el modelo rápido no se marca el resultado antes del final: solo se muestra cómo va
+      const early = null;
       if (early) Object.assign(obj, { result: early, autoResult: true, gradedAt: nowIso(),
         resultNote: (obj.live.nota || (early === "ganado" ? "Ya cumplido" : "Ya no puede cumplirse")) + " (marcado antes del final)" });
       patch(p.id, obj);
@@ -431,5 +450,7 @@ PICKS: ${JSON.stringify(items)}`;
       try { await notify(txt); } catch (e) { log("telegram " + e.message); }
     }
   }
-  return { picks: picks.length, matched: unmatched.length, finished: finished.length, live: live.length, updated: patches.size, avisos: marked.length };
+  if (patches.size) await guardarEstado({ cambio: Date.now() });
+  if (full) await guardarEstado({ nextAt: Number.isFinite(nextAt) ? nextAt : null, at: Date.now() });
+  return { picks: picks.length, matched: unmatched.length, finished: finished.length, live: live.length, updated: patches.size, avisos: marked.length, nextAt: Number.isFinite(nextAt) ? new Date(nextAt).toISOString() : null };
 }
