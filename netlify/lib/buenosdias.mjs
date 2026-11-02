@@ -15,6 +15,7 @@ const LABELS = [
   ["soccer:vip", "🏆 JUGADA VIP"],
   ["exclusiva:principal", "⭐ EXCLUSIVA"],
   ["asegurada:principal", "🔒 ASEGURADA"],
+  ["props:mvp", "🎯 JUGADA MVP"],
   ["props:principal", "🎯 PLAYER PROPS"],
   ["instagram:principal", "💎 Pick de INSTAGRAM"],
   ["free:principal", "🆓 FREE PICK"],

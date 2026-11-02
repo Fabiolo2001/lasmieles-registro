@@ -331,7 +331,7 @@ const PKGS=[
  {id:'soccer',name:'Soccer',main:'vip',extra:'pick5',secs:[{id:'vip',name:'Jugada VIP',u:10},{id:'pick5',name:'Picks extras',u:5}]},
  {id:'exclusiva',name:'Exclusiva',main:'principal',extra:'extra5',secs:[{id:'principal',name:'Exclusiva',u:10},{id:'extra5',name:'Picks extras',u:5}]},
  {id:'asegurada',name:'Asegurada',secs:[{id:'principal',name:'Asegurada',u:20}]},
- {id:'props',name:'Player Props',secs:[{id:'principal',name:'Player Prop',u:5}]},
+ {id:'props',name:'Player Props',secs:[{id:'mvp',name:'Jugada MVP',u:10},{id:'principal',name:'Player Prop',u:5}]},
  {id:'free',name:'Free Pick',secs:[{id:'principal',name:'Free Pick',u:5}]},
  {id:'instagram',name:'Jugada de Instagram',secs:[{id:'principal',name:'Jugada de Instagram',u:5}]},
 ];
@@ -660,7 +660,7 @@ function blankRow(){return{sport:'SOCCER',event:'',pick:'',betType:$('aPkg').val
 function autoPlace(row){const sel=$('aPkg').value;const U=(p,s)=>pkgOf(p).secs.find(x=>x.id===s).u;
   const set=(p,s)=>{row.pkg=p;row.sec=s;row.units=(row.readU&&(s==='pick5'||s==='extra5'))?row.readU:U(p,s);};
   if(sel==='auto'||sel==='soccer'||sel==='exclusiva'||sel==='asegurada'){
-    if(row.betType==='Player prop')return set('props','principal');
+    if(row.betType==='Player prop')return set('props','mvp');
     if(sel==='exclusiva')return set('exclusiva','extra5');
     if(row.sport==='SOCCER')return set('soccer','pick5');
     return set('exclusiva','extra5');}
