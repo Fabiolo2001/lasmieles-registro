@@ -305,16 +305,38 @@ SELECCIONES: ${JSON.stringify(items)}`;
     });
   }
 
-  /* 1c) Cuotas automáticas (Hard Rock) para picks sin cuota, antes de que empiece el partido; 2 intentos como mucho */
+  /* 1c) Cuotas automáticas (Hard Rock) para picks sin cuota, antes de que empiece el partido; 2 intentos como mucho.
+     Combinadas: cuota = producto de las cuotas de cada selección (solo si son de partidos distintos y se encuentran todas). */
   if (oddsEnabled()) {
-    const sinCuota = picks.filter((p) => (p.odds == null || p.odds === "") && !isCombo(p) && p.game && p.mkt && (p.oddsTries || 0) < 2 &&
-      (!p.game.start || Date.parse(p.game.start) > Date.now() - 5 * 60e3));
-    if (sinCuota.length) {
+    const OK = new Set(["ml", "spread", "total"]);
+    const pre = (g) => g && (!g.start || Date.parse(g.start) > Date.now() - 5 * 60e3);
+    const cand = picks.filter((p) => (p.odds == null || p.odds === "") && (p.oddsTries || 0) < 2);
+    const items = [], combos = [];
+    for (const p of cand) {
+      if (!isCombo(p)) { if (p.game && p.mkt && pre(p.game)) items.push({ id: p.id, game: p.game, mkt: p.mkt }); continue; }
+      const legs = Array.isArray(p.legs) ? p.legs : [];
+      const ids = new Set(legs.map((l) => l.game && l.game.id));
+      if (legs.length < 2 || ids.size !== legs.length || !legs.every((l) => l.game && l.mkt && OK.has(l.mkt.t) && pre(l.game))) continue;
+      legs.forEach((l, j) => items.push({ id: p.id + "#" + j, game: l.game, mkt: l.mkt }));
+      combos.push(p);
+    }
+    const tried = new Set(items.map((i) => i.id.split("#")[0]));
+    if (items.length) {
       let found = [];
-      try { found = await buscarCuotas(sinCuota, log); } catch (e) { log("cuotas error " + e.message); }
-      for (const p of sinCuota) {
-        const f = found.find((x) => x.id === p.id);
-        if (f) { p.odds = f.odds; patch(p.id, { odds: f.odds, oddsBook: f.book, oddsAuto: true }); }
+      try { found = await buscarCuotas(items, log); } catch (e) { log("cuotas error " + e.message); }
+      const dec = (o) => (o > 0 ? 1 + o / 100 : 1 + 100 / -o);
+      for (const p of cand.filter((x) => tried.has(x.id))) {
+        let odds = null, book = null;
+        if (!isCombo(p)) { const f = found.find((x) => x.id === p.id); if (f) { odds = f.odds; book = f.book; } }
+        else {
+          const fs = p.legs.map((_, j) => found.find((x) => x.id === p.id + "#" + j));
+          if (fs.every(Boolean)) {
+            const d = fs.reduce((m, f) => m * dec(f.odds), 1);
+            odds = d >= 2 ? Math.round((d - 1) * 100) : Math.round(-100 / (d - 1));
+            const books = [...new Set(fs.map((f) => f.book))]; book = books.length === 1 ? books[0] : books.join("/");
+          }
+        }
+        if (odds != null) { p.odds = odds; patch(p.id, { odds, oddsBook: book, oddsAuto: true }); }
         else patch(p.id, { oddsTries: (p.oddsTries || 0) + 1 });
       }
     }
