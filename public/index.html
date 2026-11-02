@@ -427,6 +427,14 @@ function renderDay(force){
      (note?'<button class="btn ghost danger" id="noteDel">Quitar nota</button>':'')+'</div></div>';
   h+='<div class="row" style="justify-content:space-between"><span class="lbl">Picks del día ('+list.length+')</span>'+
      (list.length?'<span class="pill">'+st.w+'-'+st.l+'-'+st.p+(st.pct!=null?' · '+st.pct.toFixed(0)+'%':'')+'</span>':'')+'</div>';
+  if(all.length){const T=S.tk&&S.tk.date===ds?S.tk:null;
+    h+='<div class="notebox" id="tkBox"><span class="lbl">Cuotas desde tickets de Hard Rock</span>'+
+      (T&&T.busy?'<div class="note">Leyendo '+T.n+' ticket(s)…</div>':
+       T&&T.res?(T.res.length?'<div class="note">Encontré '+T.res.length+' cuota(s). Revisa y aplica:</div><ul style="margin:6px 0 8px 18px;padding:0">'+T.res.map(r=>'<li>'+esc(r.pick)+': <b>'+esc(fmtOdds(r.odds))+'</b>'+(r.old!=null&&r.old!==''?' <span style="color:var(--muted)">(antes '+esc(fmtOdds(r.old))+')</span>':'')+'</li>').join('')+'</ul>'+
+         '<div class="row"><button class="btn honey" id="tkApply">Aplicar '+T.res.length+' cuota(s)</button><button class="btn ghost" id="tkCancel">Cancelar</button></div>'
+         :'<div class="note">No encontré en los tickets ningún pick de este día.</div><div class="row"><button class="btn ghost" id="tkCancel">Cerrar</button></div>')
+       :'<div class="row"><label class="btn" style="cursor:pointer">📷 Subir fotos de tickets<input type="file" id="tkFiles" accept="image/*" multiple hidden></label></div><div class="note" style="font-size:12px;color:var(--muted)">Saco la cuota de cada ticket y la pongo en su pick de este día. Los tickets sueltos en "Añadir" siguen siendo Free Pick.</div>')+
+      '</div>';}
   if(!list.length){h+='<div class="empty">No hay picks registrados este día. <button class="btn" id="goAdd" style="margin-top:8px">Añadir picks para este día</button></div>';}
   else{
     const pkgOrder=[];list.forEach(x=>{const P=pkgOf(x.package);if(P&&!pkgOrder.includes(P))pkgOrder.push(P);});
@@ -447,6 +455,11 @@ function renderDay(force){
   host.querySelectorAll('[data-exp]').forEach(b=>b.onclick=()=>{const id=b.dataset.exp;const open=!S.openNotes.has(id);if(open)S.openNotes.add(id);else S.openNotes.delete(id);
     host.querySelectorAll('[data-note="'+CSS.escape(id)+'"]').forEach(n=>n.hidden=!open);b.textContent=open?'Ocultar explicación':'Ver explicación';});
   host.querySelectorAll('[data-res]').forEach(b=>b.onclick=()=>setResult(b.dataset.id,b.dataset.res));
+  if($('tkFiles'))$('tkFiles').onchange=e=>leerTickets(ds,[...e.target.files],all);
+  if($('tkApply'))$('tkApply').onclick=async()=>{const res=S.tk.res;S.tk=null;let n=0;
+    for(const r of res){try{await db.doc('picks/'+r.id).update({odds:r.odds,oddsAuto:true,oddsBook:'Ticket'});n++;}catch(e){}}
+    toast(n+' cuota(s) puestas desde los tickets');renderDay(true);};
+  if($('tkCancel'))$('tkCancel').onclick=()=>{S.tk=null;renderDay(true);};
   host.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{S.editing='odds:'+b.dataset.q;renderDay(true);const f=$('q-odds');if(f){f.focus();f.select();}});
   if($('q-odds')){const ok=host.querySelector('[data-qok]');const save=async()=>{const v=$('q-odds').value.trim();const o=v?toAmerican(v):null;
       if(v&&o==null){toast('Cuota no válida: escribe americana (-110, +150) o decimal (1.91)');return;}
@@ -485,6 +498,18 @@ function pickCard(p){if(S.editing===p.id)return editForm(p);const r=p.result||'p
     '<div class="confirm"><button class="btn" data-ed="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">Editar</button><button class="btn ghost danger" data-del="'+esc(p.id)+'" style="padding:4px 8px;font-size:12px">Borrar pick</button>'+photos+
     (p.resultNote?'<button class="btn" data-exp="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">'+(S.openNotes.has(p.id)?'Ocultar explicación':'Ver explicación')+'</button>':'')+'</div></div>';}
 
+async function leerTickets(ds,files,all){if(!files.length)return;if(!sample){toast('La lectura con Claude no está disponible');return;}
+  S.tk={date:ds,busy:true,n:files.length};renderDay(true);
+  const list=all.map((p,k)=>({k,pick:p.pick,tipo:p.betType,deporte:p.sport,paquete:secName(p.package,p.section)}));
+  const prompt='Son fotos de tickets de apuestas (Hard Rock u otra casa). Cada ticket tiene una o varias selecciones y su cuota (la de la apuesta completa si es combinada/parlay).\n'+
+    'Estos son los picks registrados ese día: '+JSON.stringify(list)+'\n'+
+    'Para cada ticket, busca a qué pick corresponde (mismo equipo/jugador, misma línea y mismo tipo de apuesta; una combinada del ticket corresponde al pick "Combinada" con las mismas selecciones) y devuelve su cuota en formato americano (si viene en decimal, conviértela: 2.50 = +150, 1.80 = -125).\n'+
+    'No inventes: si un ticket no encaja claramente con ningún pick, no lo pongas. No uses la ganancia ni el importe apostado, solo la cuota (odds).\n'+
+    'Formato: [{"k":0,"odds":-110}]';
+  const out=[];try{for(let i=0;i<files.length;i+=6){const r=await sample.json(prompt,{images:files.slice(i,i+6)});if(Array.isArray(r))out.push(...r);}}
+  catch(e){S.tk=null;toast('No se pudieron leer los tickets: '+(e.message||'error'));renderDay(true);return;}
+  const res=[];out.forEach(x=>{const p=all[Number(x&&x.k)];const o=toAmerican(x&&x.odds);if(p&&o!=null&&!res.some(r=>r.id===p.id))res.push({id:p.id,pick:p.pick,odds:o,old:p.odds});});
+  S.tk={date:ds,res};renderDay(true);}
 async function setResult(id,res){if(!db)return;try{await db.doc('picks/'+id).update({result:res,autoResult:false,resultNote:null});}catch(e){toast(writeErr(e));}}
 async function delPick(id){if(!db)return;try{await db.doc('picks/'+id).delete();toast('Pick borrado');}catch(e){toast(writeErr(e));}}
 async function saveNote(){if(!db)return;const t=$('noteTxt').value.trim();const ds=S.sel;
