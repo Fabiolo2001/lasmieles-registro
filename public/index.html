@@ -504,6 +504,7 @@ async function leerTickets(ds,files,all){if(!files.length)return;if(!sample){toa
   const prompt='Son fotos de tickets de apuestas (Hard Rock u otra casa). Cada ticket tiene una o varias selecciones y su cuota (la de la apuesta completa si es combinada/parlay).\n'+
     'Estos son los picks registrados ese día: '+JSON.stringify(list)+'\n'+
     'Para cada ticket, busca a qué pick corresponde (mismo equipo/jugador, misma línea y mismo tipo de apuesta; una combinada del ticket corresponde al pick "Combinada" con las mismas selecciones) y devuelve su cuota en formato americano (si viene en decimal, conviértela: 2.50 = +150, 1.80 = -125).\n'+
+    'Puede haber varias fotos del mismo pick (el mismo ticket repetido, o la misma jugada con otro importe o con la cuota un poco distinta): cuenta ese pick UNA sola vez y devuelve una sola cuota para él, la del primer ticket en que aparezca. Nunca repitas el mismo "k".\n'+
     'No inventes: si un ticket no encaja claramente con ningún pick, no lo pongas. No uses la ganancia ni el importe apostado, solo la cuota (odds).\n'+
     'Formato: [{"k":0,"odds":-110}]';
   const out=[];try{for(let i=0;i<files.length;i+=6){const r=await sample.json(prompt,{images:files.slice(i,i+6)});if(Array.isArray(r))out.push(...r);}}
