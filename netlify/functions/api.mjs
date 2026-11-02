@@ -13,6 +13,8 @@ import { COOKIE, sign, verify, sameText } from "../lib/sesion.mjs";
 import { scoreboard, LEAGUES } from "../lib/deportes.mjs";
 import { notify, esc as tesc } from "../lib/telegram.mjs";
 import { leerEstado, guardarEstado } from "../lib/estado.mjs";
+import { generar, leerGuardado, PROMO_MIELES50, WEB, miamiDate } from "../lib/buenosdias.mjs";
+import { enviarBuenosDias } from "../lib/buenosdias-envio.mjs";
 import { getDatabase } from "@netlify/database";
 import { getStore } from "@netlify/blobs";
 import Anthropic from "@anthropic-ai/sdk";
@@ -174,6 +176,15 @@ export default async (req, context) => {
       const ok = await notify("✅ <b>Prueba</b>\nLos avisos del Registro Las Mieles están activos. Te escribiré aquí cada vez que se marque un pick.");
       return json({ enviado: ok, token: !!Netlify.env.get("TELEGRAM_BOT_TOKEN"), chat: !!Netlify.env.get("TELEGRAM_CHAT_ID") });
     }
+    // Prueba del mensaje de buenos días: lo manda ya a tu Telegram (protegido con RESUMEN_KEY)
+    if (route === "buenos-dias-prueba" && m === "GET") {
+      const key = Netlify.env.get("RESUMEN_KEY");
+      if (!key || !sameText(url.searchParams.get("k") || "", key)) return json({ error: "Clave no válida" }, 401);
+      const d = url.searchParams.get("d") || miamiDate(Date.now() - 864e5);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return json({ error: "Fecha no válida" }, 400);
+      const doc = await enviarBuenosDias(d, (context.site && context.site.url) || Netlify.env.get("URL") || url.origin);
+      return json({ ok: true, fecha: d, totales: doc.t, sinCuota: doc.sinCuota });
+    }
     // Resumen del día para la tarea del mensaje de buenos días (protegido con clave RESUMEN_KEY)
     if (route === "resumen" && m === "GET") {
       const key = Netlify.env.get("RESUMEN_KEY");
@@ -199,6 +210,15 @@ export default async (req, context) => {
     if (route === "me") return json({ name: ses.n });
     // La página pregunta aquí (sin tocar la base de datos) si hubo cambios
     if (route === "cambios") { const e = await leerEstado(); return json({ cambio: e.cambio || 0 }); }
+
+    // Borrador del buenos días para la página de códigos
+    if (route === "buenos-dias") {
+      const d = url.searchParams.get("d") || miamiDate(Date.now() - 864e5);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return json({ error: "Fecha no válida" }, 400);
+      let doc = m === "POST" ? null : await leerGuardado(d);
+      if (!doc) doc = await generar(d);
+      return json({ ...doc, promo50: PROMO_MIELES50, web: WEB });
+    }
 
     if (route === "docs") {
       const table = parts[1], id = parts[2];

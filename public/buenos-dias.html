@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Buenos días · Las Mieles</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f3f5f1;--surface:#fff;--sunk:#e8ece5;--line:#d5dcd2;--fg:#16211b;--muted:#5a6a60;--honey:#b77a06;--honey-soft:#fbefd2;--win:#1d8248;--loss:#bf3b26;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;--body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1411;--surface:#161f1a;--sunk:#1d2822;--line:#2b3a31;--fg:#e7eee8;--muted:#97a69c;--honey:#f2b632;--honey-soft:#3a2d0f;--win:#4cc47e;--loss:#ef7660;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1411;--surface:#161f1a;--sunk:#1d2822;--line:#2b3a31;--fg:#e7eee8;--muted:#97a69c;--honey:#f2b632;--honey-soft:#3a2d0f;--win:#4cc47e;--loss:#ef7660;color-scheme:dark}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-family:var(--display);font-size:30px;margin:0 0 4px;line-height:1}h1 span{color:var(--honey)}
+.sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+h2{font-family:var(--display);font-size:20px;margin:0 0 10px;letter-spacing:.02em}
+label{display:flex;gap:10px;align-items:center;font-size:15px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+input[type=text],input[type=number],select,textarea{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--honey)}
+textarea{width:100%;min-height:330px;resize:vertical;font-size:15px;line-height:1.45;white-space:pre-wrap}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:11px 16px;cursor:pointer;background:var(--honey);color:#1b1404}
+button.sec{background:var(--sunk);color:var(--fg);border:1px solid var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips label{background:var(--sunk);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:14px;gap:6px}
+.code{flex:1 1 140px;text-transform:uppercase}.pct{flex:0 0 90px}
+.otro{border-top:1px dashed var(--line);margin-top:12px;padding-top:12px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.warn{background:var(--honey-soft);border-radius:8px;padding:8px 10px;font-size:14px;margin-bottom:10px}
+.tally{font-family:var(--display);font-size:18px}.tally b.w{color:var(--win)}.tally b.l{color:var(--loss)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+#msg{font-size:14px;color:var(--muted);min-height:20px;margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Buenos días <span>🍯</span></h1>
+  <p class="sub" id="sub">Cargando…</p>
+
+  <div id="login" class="card" hidden>No has iniciado sesión. <a href="/">Entra en el registro</a> y vuelve a abrir este enlace.</div>
+
+  <div id="app" hidden>
+    <div class="card">
+      <h2>Códigos de hoy</h2>
+      <label><input type="checkbox" id="c50" checked> MIELES50 · 50% en todas las suscripciones diarias</label>
+      <div id="otros"></div>
+      <div class="acts"><button class="sec" id="addOtro" type="button">+ Otro código</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Mensaje</h2>
+      <div id="avisos"></div>
+      <textarea id="txt" aria-label="Mensaje para el canal"></textarea>
+      <p class="note">Puedes retocar el texto aquí mismo antes de copiarlo. Los cambios en los códigos rehacen la parte de la promo.</p>
+      <div class="acts">
+        <button id="copy" type="button">Copiar mensaje</button>
+        <button class="sec" id="regen" type="button">Rehacer con otras frases</button>
+      </div>
+      <div id="msg" role="status"></div>
+    </div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const P=new URLSearchParams(location.search);let D=null;
+const PAQ=[['Soccer','⚽'],['Exclusiva','⭐'],['Asegurada','🔒'],['Player Props','🎯'],['Premium','👑']];
+const DUR=[['diaria','diarias'],['semanal','semanales'],['mensual','mensuales']];
+function otroHTML(){return '<div class="otro"><div class="row"><input type="text" class="code" placeholder="CÓDIGO" aria-label="Código">'+
+  '<input type="number" class="pct" min="1" max="100" placeholder="%" aria-label="Porcentaje">'+
+  '<select class="dur" aria-label="Duración">'+DUR.map(d=>'<option value="'+d[0]+'">'+d[1]+'</option>').join('')+'</select>'+
+  '<button class="sec quitar" type="button" aria-label="Quitar código">✕</button></div>'+
+  '<div class="chips">'+PAQ.map(p=>'<label><input type="checkbox" value="'+p[0]+'">'+p[1]+' '+p[0]+'</label>').join('')+'</div>'+
+  '<p class="note">Sin paquetes marcados = todos los paquetes.</p></div>';}
+function lista(a){return a.length<2?a[0]:a.slice(0,-1).join(', ')+' y '+a[a.length-1];}
+function promoOtro(el){const c=el.querySelector('.code').value.trim().toUpperCase();const pct=el.querySelector('.pct').value.trim();if(!c||!pct)return '';
+  const dur=DUR.find(d=>d[0]===el.querySelector('.dur').value);
+  const pk=[...el.querySelectorAll('.chips input:checked')].map(i=>{const p=PAQ.find(x=>x[0]===i.value);return p[0]+p[1];});
+  const que=pk.length?(pk.length===1?'la suscripción '+dur[0]+' de '+pk[0]:'las suscripciones '+dur[1]+' de '+lista(pk)):'todas las suscripciones '+dur[1];
+  return '🎟️ Código '+c+': '+pct+'% OFF en '+que;}
+function componer(){if(!D)return;const ps=[];if($('c50').checked)ps.push(D.promo50);
+  document.querySelectorAll('#otros .otro').forEach(o=>{const t=promoOtro(o);if(t)ps.push(t);});
+  $('txt').value=D.cuerpo+'\n'+(ps.length?'\n'+ps.join('\n')+'\n👉 '+D.web+'\n':'')+'\nCONFÍA🍯';}
+function pintar(){const t=D.t;const[y,m,d]=D.fecha.split('-');
+  $('sub').innerHTML='Noche del '+(+d)+'/'+(+m)+' · <span class="tally"><b class="w">'+t.ganados+'✅</b> <b class="l">'+t.perdidos+'❌</b>'+(t.nulos?' '+t.nulos+'↩️':'')+(t.net?' · '+(t.net>0?'+':'')+t.net+' U':'')+'</span>';
+  const av=[];if(t.pendientes)av.push('⚠️ '+t.pendientes+' pick(s) aún sin resultado: no salen en la lista.');
+  if(D.sinCuota)av.push('✏️ '+D.sinCuota+' pick(s) llevan "(cuota: __)": combinadas o sin cuota en el registro. Ponla tú.');
+  $('avisos').innerHTML=av.map(a=>'<div class="warn">'+a.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+'</div>').join('');componer();}
+async function cargar(post){$('msg').textContent=post?'Rehaciendo…':'';
+  const r=await fetch('/api/buenos-dias'+(P.get('d')?'?d='+encodeURIComponent(P.get('d')):''),{method:post?'POST':'GET',credentials:'same-origin'});
+  if(r.status===401){$('sub').textContent='';$('login').hidden=false;return;}
+  const j=await r.json();if(!r.ok){$('sub').textContent=j.error||'Error';return;}
+  D=j;$('app').hidden=false;pintar();$('msg').textContent=post?'Listo, frases nuevas.':'';}
+$('c50').onchange=componer;
+$('addOtro').onclick=()=>{const w=document.createElement('div');w.innerHTML=otroHTML();const el=w.firstChild;$('otros').append(el);
+  el.addEventListener('input',componer);el.addEventListener('change',componer);el.querySelector('.quitar').onclick=()=>{el.remove();componer();};el.querySelector('.code').focus();};
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('txt').value);$('msg').textContent='Copiado ✅ Pégalo en el canal.';}
+  catch{$('txt').select();document.execCommand('copy');$('msg').textContent='Copiado ✅';}};
+$('regen').onclick=()=>cargar(true);
+cargar(false).catch(()=>{$('sub').textContent='No se pudo cargar. Prueba otra vez.';});
+</script>
+</body>
+</html>
