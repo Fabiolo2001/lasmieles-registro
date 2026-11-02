@@ -1,6 +1,7 @@
 // Marcadores (ESPN), vinculación de picks con su partido y calificación automática.
 import { getDatabase } from "@netlify/database";
 import Anthropic from "@anthropic-ai/sdk";
+import { buscarCuotas, oddsEnabled } from "./cuotas.mjs";
 import { notify, esc } from "./telegram.mjs";
 import { guardarEstado } from "./estado.mjs";
 import "../../public/mercado.js";
@@ -304,6 +305,21 @@ SELECCIONES: ${JSON.stringify(items)}`;
     });
   }
 
+  /* 1c) Cuotas automáticas (Hard Rock) para picks sin cuota, antes de que empiece el partido; 2 intentos como mucho */
+  if (oddsEnabled()) {
+    const sinCuota = picks.filter((p) => (p.odds == null || p.odds === "") && !isCombo(p) && p.game && p.mkt && (p.oddsTries || 0) < 2 &&
+      (!p.game.start || Date.parse(p.game.start) > Date.now() - 5 * 60e3));
+    if (sinCuota.length) {
+      let found = [];
+      try { found = await buscarCuotas(sinCuota, log); } catch (e) { log("cuotas error " + e.message); }
+      for (const p of sinCuota) {
+        const f = found.find((x) => x.id === p.id);
+        if (f) { p.odds = f.odds; patch(p.id, { odds: f.odds, oddsBook: f.book, oddsAuto: true }); }
+        else patch(p.id, { oddsTries: (p.oddsTries || 0) + 1 });
+      }
+    }
+  }
+
   /* 2) Estado de los partidos de cada pick */
   const finished = [], live = [];
   const getGame = async (ref) => ref ? (await scoreboard(ref.league, ref.ymd)).find((x) => x.id === ref.id) || null : null;
@@ -436,7 +452,7 @@ PICKS: ${JSON.stringify(items)}`;
   /* 6) Aviso por Telegram de cada pick marcado, con el balance del día */
   if (marked.length) {
     const PK = { soccer: "Soccer", exclusiva: "Exclusiva", asegurada: "Asegurada", props: "Player Props", free: "Free Pick", instagram: "Instagram" };
-    const SEC = { vip: "Jugada VIP", pick5: "Picks extras", extra5: "Picks extras" };
+    const SEC = { vip: "Jugada VIP", pick5: "Picks extras", extra5: "Picks extras", mvp: "Jugada MVP" };
     const ICON = { ganado: "✅", perdido: "❌", nulo: "➖" };
     for (const { p, obj } of marked) {
       const day = (await sql`SELECT data->>'result' AS r, (data->>'units')::float AS u FROM picks WHERE date = ${p.date}`);

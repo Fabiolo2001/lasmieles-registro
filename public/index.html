@@ -450,7 +450,7 @@ function renderDay(force){
   host.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{S.editing='odds:'+b.dataset.q;renderDay(true);const f=$('q-odds');if(f){f.focus();f.select();}});
   if($('q-odds')){const ok=host.querySelector('[data-qok]');const save=async()=>{const v=$('q-odds').value.trim();const o=v?toAmerican(v):null;
       if(v&&o==null){toast('Cuota no válida: escribe americana (-110, +150) o decimal (1.91)');return;}
-      S.editing=null;try{await db.doc('picks/'+ok.dataset.qok).update({odds:o});toast(o==null?'Cuota quitada':'Cuota guardada: '+fmtOdds(o));}catch(e){toast(writeErr(e));}renderDay(true);};
+      S.editing=null;try{await db.doc('picks/'+ok.dataset.qok).update({odds:o,oddsAuto:false,oddsBook:null});toast(o==null?'Cuota quitada':'Cuota guardada: '+fmtOdds(o));}catch(e){toast(writeErr(e));}renderDay(true);};
     ok.onclick=save;$('q-odds').onkeydown=e=>{if(e.key==='Enter')save();if(e.key==='Escape'){S.editing=null;renderDay(true);}};
     host.querySelector('[data-qno]').onclick=()=>{S.editing=null;renderDay(true);};}
   host.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
@@ -471,7 +471,7 @@ async function saveEdit(id){if(!db)return;const date=$('e-date').value;const [pk
   if(!date||!pick){toast('La fecha y la jugada no pueden quedar vacías');return;}
   $('e-save').disabled=true;
   try{await db.doc('picks/'+id).update({date,month:date.slice(0,7),package:pk,section:sc,pick,
-    sport:$('e-sport').value,betType:$('e-type').value,units:Number($('e-units').value)||0,odds:toAmerican($('e-odds').value),event:$('e-event').value.trim(),eventAuto:false,mkt:null,game:null,legs:null,matchTries:0,final:null,live:null,resultNote:null,editedAt:new Date().toISOString()});
+    sport:$('e-sport').value,betType:$('e-type').value,units:Number($('e-units').value)||0,odds:toAmerican($('e-odds').value),event:$('e-event').value.trim(),eventAuto:false,mkt:null,game:null,legs:null,matchTries:0,oddsTries:0,final:null,live:null,resultNote:null,editedAt:new Date().toISOString()});
     S.editing=null;toast('Pick actualizado');triggerUpdate([id]);
     if(date!==S.sel){S.sel=date;setMonth(date.slice(0,7));}else renderDay();
   }catch(e){$('e-save').disabled=false;toast(writeErr(e));}}
@@ -480,7 +480,7 @@ function pickCard(p){if(S.editing===p.id)return editForm(p);const r=p.result||'p
   return '<div class="pick '+esc(r)+'">'+
     '<div class="pk">'+esc(p.pick)+'</div>'+gameLine(p)+
     '<div class="meta"><span style="color:var(--honey);font-weight:600">'+esc(secName(p.package,p.section))+'</span><span>'+esc(p.sport)+'</span><span>'+esc(p.betType)+'</span><span>'+esc(p.units)+' U</span>'+(S.editing==='odds:'+p.id?'<span data-edit="odds" style="display:inline-flex;gap:4px;align-items:center"><input id="q-odds" aria-label="Cuota americana" placeholder="-110" value="'+esc(fmtOdds(p.odds))+'" style="width:80px;padding:3px 6px;font-size:13px" inputmode="text"><button class="btn" data-qok="'+esc(p.id)+'" style="padding:3px 8px;font-size:12px">OK</button><button class="btn ghost" data-qno style="padding:3px 8px;font-size:12px">✕</button></span>'
-      :(p.odds!=null&&p.odds!==''?'<button class="btn ghost" data-q="'+esc(p.id)+'" title="Cambiar cuota" style="padding:0 6px;font-size:12px">Cuota '+esc(fmtOdds(p.odds))+'</button>':'<button class="btn" data-q="'+esc(p.id)+'" style="padding:0 8px;font-size:12px">+ Cuota</button>'))+'</div>'+
+      :(p.odds!=null&&p.odds!==''?'<button class="btn ghost" data-q="'+esc(p.id)+'" title="Cambiar cuota" style="padding:0 6px;font-size:12px">Cuota '+esc(fmtOdds(p.odds))+(p.oddsAuto&&p.oddsBook?' · '+esc(p.oddsBook):'')+'</button>':'<button class="btn" data-q="'+esc(p.id)+'" style="padding:0 8px;font-size:12px">+ Cuota</button>'))+'</div>'+
     '<div class="seg">'+RES.map(([k,t])=>'<button class="'+k+(k===r?' on':'')+'" data-res="'+k+'" data-id="'+esc(p.id)+'">'+t+'</button>').join('')+'</div>'+
     '<div class="confirm"><button class="btn" data-ed="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">Editar</button><button class="btn ghost danger" data-del="'+esc(p.id)+'" style="padding:4px 8px;font-size:12px">Borrar pick</button>'+photos+
     (p.resultNote?'<button class="btn" data-exp="'+esc(p.id)+'" style="padding:4px 10px;font-size:12px">'+(S.openNotes.has(p.id)?'Ocultar explicación':'Ver explicación')+'</button>':'')+'</div></div>';}
