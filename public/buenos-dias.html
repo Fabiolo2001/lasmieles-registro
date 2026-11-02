@@ -87,7 +87,6 @@ function componer(){if(!D)return;const ps=[];if($('c50').checked)ps.push(D.promo
 function pintar(){const t=D.t;const[y,m,d]=D.fecha.split('-');
   $('sub').innerHTML='Noche del '+(+d)+'/'+(+m)+' · <span class="tally"><b class="w">'+t.ganados+'✅</b> <b class="l">'+t.perdidos+'❌</b>'+(t.nulos?' '+t.nulos+'↩️':'')+(t.net?' · '+(t.net>0?'+':'')+t.net+' U':'')+'</span>';
   const av=[];if(t.pendientes)av.push('⚠️ '+t.pendientes+' pick(s) aún sin resultado: no salen en la lista.');
-  if(D.sinCuota)av.push('✏️ '+D.sinCuota+' pick(s) llevan "(cuota: __)": combinadas o sin cuota en el registro. Ponla tú.');
   $('avisos').innerHTML=av.map(a=>'<div class="warn">'+a.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+'</div>').join('');componer();}
 async function cargar(post){$('msg').textContent=post?'Rehaciendo…':'';
   const r=await fetch('/api/buenos-dias'+(P.get('d')?'?d='+encodeURIComponent(P.get('d')):''),{method:post?'POST':'GET',credentials:'same-origin'});

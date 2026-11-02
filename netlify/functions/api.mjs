@@ -183,7 +183,7 @@ export default async (req, context) => {
       const d = url.searchParams.get("d") || miamiDate(Date.now() - 864e5);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return json({ error: "Fecha no válida" }, 400);
       const doc = await enviarBuenosDias(d, (context.site && context.site.url) || Netlify.env.get("URL") || url.origin);
-      return json({ ok: true, fecha: d, totales: doc.t, sinCuota: doc.sinCuota });
+      return json({ ok: true, fecha: d, totales: doc.t });
     }
     // Resumen del día para la tarea del mensaje de buenos días (protegido con clave RESUMEN_KEY)
     if (route === "resumen" && m === "GET") {

@@ -1,6 +1,4 @@
 // Mensaje de buenos días para el canal, a partir de cómo fue la noche anterior (hora de Miami).
-// Las cuotas salen del propio registro (las que se cargaron del ticket). Las combinadas y los picks
-// sin cuota llevan "(cuota: __)" para ponerla a mano.
 import { getDatabase } from "@netlify/database";
 import { getStore } from "@netlify/blobs";
 import { askClaude, parseJSON } from "./deportes.mjs";
@@ -34,15 +32,22 @@ export const madridParts = (t = Date.now()) => {
   return { date: `${o.year}-${o.month}-${o.day}`, hour: Number(o.hour) };
 };
 
-function pickLine(p) {
-  const key = p.package + ":" + p.section;
-  const lab = (LABELS.find((l) => l[0] === key) || [key, "🔥 PICK"])[1];
-  const label = lab.includes("PICK EXTRA") ? lab + " " + (p.sport || "") + (SPORT_EMOJI[p.sport] && lab.startsWith("🔥") ? SPORT_EMOJI[p.sport] : "") : lab;
-  const combo = p.betType === "Combinada" || (Array.isArray(p.legs) && p.legs.length > 1);
-  const o = fmtOdds(p.odds);
-  const cuota = combo || !o ? "(cuota: __)" : "(" + o + ")";
-  const jugada = String(p.pick || "").replace(/\s+/g, " ").trim();
-  return { order: LABELS.findIndex((l) => l[0] === key), line: `${label.trim()}: ${jugada} ${cuota} ✅` };
+// Una línea por paquete cobrado, como en el canal (sin picks ni cuotas)
+function lineasPaquetes(picks) {
+  const g = {};
+  for (const p of picks) {
+    let key = p.package + ":" + p.section;
+    if (key === "soccer:pick5" || key === "exclusiva:extra5") key = "extras";
+    const e = (g[key] ||= { w: 0, l: 0 });
+    if (p.result === "ganado") e.w++; else if (p.result === "perdido") e.l++;
+  }
+  const out = [];
+  for (const [key, label] of [...LABELS.filter((l) => !l[1].includes("EXTRA")), ["extras", "🔥 PICKS EXTRAS"]]) {
+    const e = g[key]; if (!e || !e.w) continue;
+    const name = label.replace(/^\S+\s/, ""), emo = label.split(" ")[0];
+    out.push(e.w > 1 && !e.l ? `${emo} PERFECT de ${name} ✅` : `${emo} ${name} ✅`);
+  }
+  return out;
 }
 
 /* Datos de la noche */
@@ -64,7 +69,7 @@ export async function datosNoche(date) {
 /* Texto base (sin promo y sin "CONFÍA") + cabecera para ti */
 export async function generar(date) {
   const { picks, t } = await datosNoche(date);
-  const ganados = picks.filter((p) => p.result === "ganado").map(pickLine).sort((a, b) => a.order - b.order);
+  const lineas = lineasPaquetes(picks);
   // Resumen por paquete para Claude (perfects, fallos)
   const porPaquete = {};
   for (const p of picks) {
@@ -104,9 +109,8 @@ Formato: {"apertura":["..."],"animo":"..."}`;
   if (!apertura.length) apertura = [t.ganados > t.perdidos ? "Anoche la rompimos otra vez💪" : t.ganados ? "Anoche cobramos y seguimos sumando💪" : "Anoche no se nos dio, pero hoy la recuperamos🍯💪"];
   if (!animo) animo = "Hoy volvemos con todo para seguir facturando💸";
 
-  const cuerpo = ["Buenos días familia🍯", ...apertura, ...ganados.map((g) => g.line), "", animo].join("\n");
-  const sinCuota = ganados.filter((g) => g.line.includes("(cuota: __)")).length;
-  const doc = { fecha: date, cuerpo, t, sinCuota, creado: Date.now() };
+  const cuerpo = ["Buenos días familia🍯", ...apertura, ...lineas, "", animo].join("\n");
+  const doc = { fecha: date, cuerpo, t, creado: Date.now() };
   await store().setJSON("bd-" + date, doc);
   return doc;
 }
