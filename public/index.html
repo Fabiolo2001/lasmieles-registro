@@ -569,7 +569,7 @@ async function exportPdf(){
     y+=40;
     const sel=id=>$(id).selectedOptions[0]?$(id).selectedOptions[0].text:'';
     const filt=['Periodo: '+clean(A.period),'Paquete: '+clean(sel('fPkg')),'Deporte: '+clean(sel('fSport')),'Tipo: '+clean(sel('fType'))];
-    if(S.noProps&&S.fPkg!=='props')filt.push('Sin Player Props');
+    if(S.noProps&&!String(S.fPkg||'').startsWith('props'))filt.push('Sin Player Props');
     doc.setTextColor(22,33,27);doc.setFontSize(10);doc.text(filt.join('   |   '),40,y,{maxWidth:W-80});y+=22;
     const st=A.st;
     doc.autoTable({startY:y,theme:'plain',styles:{fontSize:10,cellPadding:4},headStyles:{textColor:[90,106,96],fontStyle:'bold'},bodyStyles:{fontSize:14,fontStyle:'bold'},
@@ -622,7 +622,7 @@ function renderAna(){
   else if(S.scope==='wk'){const mon=mondayOf(today);range=[mon,today];}
   else if(S.scope==='lwk'){const mon=addDays(mondayOf(today),-7);range=[mon,addDays(mon,6)];}
   if(range)base=base.filter(x=>x.date>=range[0]&&x.date<=range[1]);
-  const list=base.filter(x=>!(S.noProps&&x.package==='props'&&S.fPkg!=='props')&&(!S.fPkg||(S.fPkg.includes(':')?x.package+':'+x.section===S.fPkg:x.package===S.fPkg))&&(!S.fSport||x.sport===S.fSport)&&(!S.fType||x.betType===S.fType));
+  const list=base.filter(x=>!(S.noProps&&x.package==='props'&&!String(S.fPkg||'').startsWith('props'))&&(!S.fPkg||(S.fPkg.includes(':')?x.package+':'+x.section===S.fPkg:x.package===S.fPkg))&&(!S.fSport||x.sport===S.fSport)&&(!S.fType||x.betType===S.fType));
   const st=stats(list);
   const rTxt=range?' ('+fmtShort(range[0])+(range[0]!==range[1]?' – '+fmtShort(range[1]):'')+')':'';
   const period=S.scope==='all'?'todo el histórico':nDays?'los últimos '+nDays+(nDays===1?' día':' días')+rTxt:S.scope==='wk'?'esta semana'+rTxt:S.scope==='lwk'?'la semana pasada'+rTxt:$('mTitle').textContent;
