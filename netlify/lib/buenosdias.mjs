@@ -16,7 +16,6 @@ const LABELS = [
   ["exclusiva:principal", "⭐ EXCLUSIVA"],
   ["asegurada:principal", "🔒 ASEGURADA"],
   ["props:mvp", "🎯 JUGADA MVP"],
-  ["props:principal", "🎯 PLAYER PROPS"],
   ["instagram:principal", "💎 Pick de INSTAGRAM"],
   ["free:principal", "🆓 FREE PICK"],
   ["soccer:pick5", "⚽ PICK EXTRA"],
@@ -38,7 +37,7 @@ function lineasPaquetes(picks) {
   const g = {};
   for (const p of picks) {
     let key = p.package + ":" + p.section;
-    if (key === "soccer:pick5" || key === "exclusiva:extra5") key = "extras";
+    if (key === "soccer:pick5" || key === "exclusiva:extra5" || key === "props:principal") key = "extras";
     const e = (g[key] ||= { w: 0, l: 0 });
     if (p.result === "ganado") e.w++; else if (p.result === "perdido") e.l++;
   }

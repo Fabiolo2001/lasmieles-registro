@@ -331,7 +331,7 @@ const PKGS=[
  {id:'soccer',name:'Soccer',main:'vip',extra:'pick5',secs:[{id:'vip',name:'Jugada VIP',u:10},{id:'pick5',name:'Picks extras',u:5}]},
  {id:'exclusiva',name:'Exclusiva',main:'principal',extra:'extra5',secs:[{id:'principal',name:'Exclusiva',u:10},{id:'extra5',name:'Picks extras',u:5}]},
  {id:'asegurada',name:'Asegurada',secs:[{id:'principal',name:'Asegurada',u:20}]},
- {id:'props',name:'Player Props',secs:[{id:'mvp',name:'Jugada MVP',u:10},{id:'principal',name:'Player Prop',u:5}]},
+ {id:'props',name:'Player Props',main:'mvp',extra:'principal',secs:[{id:'mvp',name:'Jugada MVP',u:10},{id:'principal',name:'Picks extras',u:3}]},
  {id:'free',name:'Free Pick',secs:[{id:'principal',name:'Free Pick',u:5}]},
  {id:'instagram',name:'Jugada de Instagram',secs:[{id:'principal',name:'Jugada de Instagram',u:5}]},
 ];
@@ -684,9 +684,9 @@ function curUnits(){const P=pkgOf(curPkg());const s=P.secs.find(x=>x.id===curSec
 function blankRow(){return{sport:'SOCCER',event:'',pick:'',betType:$('aPkg').value==='props'?'Player prop':'Moneyline',pkg:curPkg(),sec:curSec(),units:curUnits()};}
 /* Reparto automático de un pick sin emoji */
 function autoPlace(row){const sel=$('aPkg').value;const U=(p,s)=>pkgOf(p).secs.find(x=>x.id===s).u;
-  const set=(p,s)=>{row.pkg=p;row.sec=s;row.units=(row.readU&&(s==='pick5'||s==='extra5'))?row.readU:U(p,s);};
+  const set=(p,s)=>{row.pkg=p;row.sec=s;row.units=(row.readU&&(s==='pick5'||s==='extra5'||(p==='props'&&s==='principal')))?row.readU:U(p,s);};
   if(sel==='auto'||sel==='soccer'||sel==='exclusiva'||sel==='asegurada'){
-    if(row.betType==='Player prop')return set('props','mvp');
+    if(row.betType==='Player prop')return set('props','principal');
     if(sel==='exclusiva')return set('exclusiva','extra5');
     if(row.sport==='SOCCER')return set('soccer','pick5');
     return set('exclusiva','extra5');}
@@ -716,6 +716,7 @@ async function readPhotos(){
    '- Lee la imagen de arriba abajo y devuelve TODOS los picks, uno por objeto, en el mismo orden. Cada línea o bloque con su propio partido o jugada es un pick distinto, aunque sea del mismo partido o del mismo tipo. Cuenta los picks antes de responder y no te saltes ninguno.\n'+
    '- Over/Under: cualquier jugada con Over, Under, O, U, Más de, Menos de, Alta o Baja seguida de una línea (2.5, 9.5, 210.5…) es betType "Over/Under", sea de goles, córners, tarjetas, puntos, carreras o de un jugador (si es de un jugador concreto usa "Player prop"). Copia la jugada entera tal como aparece, con los equipos si los nombra y sin traducir nada: "Torino-Como Over 2.5 Goals" se queda "Torino-Como Over 2.5 Goals" (nunca "Over 2.5 goles"); "Real Madrid vs Getafe Under 9.5 córners" se queda igual.\n'+
    '- Estrella: si un pick tiene una estrella, pon "star": true. Candado o Lock: si tiene un candado, o si en el texto junto al pick pone "& Lock" o "Lock", pon "lock": true y deja en "pick" solo la jugada. Solo esos picks son de La Asegurada. Copa o VIP: si tiene una copa o trofeo 🏆, o si en el texto junto al pick pone "& VIP", pon "trophy": true y deja en "pick" solo la jugada (es la Jugada VIP de Soccer). Joya o Instagram: si tiene una joya o diamante 💎, o si junto al pick pone "Instagram" (por ejemplo "Over 2.5 & Instagram"), pon "gem": true y deja en "pick" solo la jugada, sin la palabra Instagram. En la misma foto pueden venir picks con icono y picks extras sin icono: devuélvelos todos. Mira el icono de cada pick por separado.\n'+
+   '- Jugada MVP: en Player Props solo hay una jugada principal, la Jugada MVP (10 unidades); el resto son picks extras (normalmente "3 units"). Si un pick pone MVP o 10 unidades, pon "mvp": true y quita la palabra MVP de "pick".\n'+
    '- Player props: cualquier jugada sobre un jugador concreto (goles, tiros, asistencias, puntos, rebotes, strikeouts… de un jugador) es betType "Player prop", también en fútbol. Pon bien "sport" en cada pick.\n'+
    '- Unidades: si junto a un pick pone cuántas unidades lleva (en la foto suele poner "3 units"; en el texto suele poner "&3" pegado al pick; también 3U, 3 unidades, Stake 3…), pon ese número en "units" y quita esa marca de "pick". Si no lo pone, "units": null.\n'+
    '- Fecha: si aparece una fecha para un pick o un grupo de picks (25/10, Oct 25, 10-25-2026, sábado 25…), ponla en "date" como AAAA-MM-DD. Si no trae año, usa el año de la fecha de referencia '+$('aDate').value+'. Las palabras Active, Inactive, Activo o Inactivo no son parte del pick ni de la fecha: ignóralas y no las copies.\n'+
@@ -753,8 +754,14 @@ async function readPhotos(){
       else if(star){row.pkg='exclusiva';row.sec='principal';row.units=10;}
       else if(o.free===true||/free\s*pick/i.test(pk)){row.pkg='free';row.sec='principal';row.units=5;row.pick=row.pick.replace(/\s*[&+\-–|]?\s*\(?free\s*pick\)?/i,'').trim();}
       else autoPlace(row);
-      row.files=srcFiles;
+      row.mvpFlag=o.mvp===true||/\bMVP\b/i.test(pk)||row.readU>=10;row.pick=row.pick.replace(/\s*[&+\-–|(]?\s*\bMVP\b\s*\)?/i,'').trim();
+      row.files=srcFiles;row.batch=true;
       S.rows.push(row);});
+    /* Player Props: una sola Jugada MVP (10 U); el resto, picks extras (3 U o lo que ponga) */
+    {const pr=S.rows.filter(r=>r.batch&&r.pkg==='props');const flagged=pr.filter(r=>r.mvpFlag);
+      const mv=flagged.length?flagged.slice(0,1):(pr.length===1?pr:[]);
+      pr.forEach(r=>{if(mv.includes(r)){r.sec='mvp';r.units=10;}else{r.sec='principal';r.units=r.readU&&r.readU<10?r.readU:3;}});
+      S.rows.forEach(r=>{delete r.batch;delete r.mvpFlag;});}
     if(arr.length){setFiles([]);$('pasteTxt').value='';try{$('photoIn').value='';}catch(e){}}
     $('readStatus').textContent=arr.length?'Se leyeron '+arr.length+' picks. La foto y el texto se quitaron para no leerlos dos veces. Revisa la lista abajo antes de guardar.':'No encontré picks. Revisa la foto o pega el texto en el paso 2.';
     renderRows();
