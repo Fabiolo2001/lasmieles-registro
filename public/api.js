@@ -113,9 +113,18 @@
       imgs.push({ type: 'image/jpeg', data: await toB64(blob) });
     }
     let r;
-    try {
-      r = await fetch('/api/leer', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt, images: imgs }) });
-    } catch (e) { throw { code: 'upstream_error', message: 'Sin conexión' }; }
+    const body = JSON.stringify({ prompt, images: imgs });
+    // Con datos móviles la subida a veces se corta: se reintenta sola hasta 2 veces más
+    for (let intento = 0; ; intento++) {
+      try {
+        r = await fetch('/api/leer', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body });
+        if (r.status >= 500 && r.status !== 501 && intento < 2) { await new Promise(ok => setTimeout(ok, 1500)); continue; }
+        break;
+      } catch (e) {
+        if (intento < 2) { await new Promise(ok => setTimeout(ok, 1500)); continue; }
+        throw { code: 'upstream_error', message: 'Se cortó la conexión al subir la foto. Prueba con wifi o vuelve a intentarlo.' };
+      }
+    }
     if (r.status === 401) { window.dispatchEvent(new Event('lm-sesion-caducada')); throw { code: 'not_granted', message: 'Sesión caducada' }; }
     if (!r.ok) {
       let j = {}; try { j = await r.json(); } catch (e) {}

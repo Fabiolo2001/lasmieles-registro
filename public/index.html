@@ -769,7 +769,7 @@ async function readPhotos(){
     const m={not_granted:'Tu sesión caducó. Vuelve a entrar.',rate_limited:'Demasiadas lecturas seguidas. Espera un momento e inténtalo otra vez.',
       image_rejected:'No se pudo abrir esa imagen. Prueba con otra captura (JPG o PNG).',invalid_json:'Claude no devolvió una lista clara. Pulsa "Leer picks" otra vez.',
       refused:'Claude no pudo leer esta imagen. Pega el texto de los picks en el paso 2.'};
-    $('readStatus').textContent=m[e&&e.code]||'No se pudo leer la foto. Inténtalo de nuevo.';
+    $('readStatus').textContent=m[e&&e.code]||(e&&e.message&&/conexión/.test(e.message)?e.message:'No se pudo leer la foto. Inténtalo de nuevo.');
   }finally{$('readBtn').disabled=!S.files.length&&!($('pasteTxt').value||'').trim();}
 }
 function opt(list,v){return list.map(x=>'<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>').join('');}
